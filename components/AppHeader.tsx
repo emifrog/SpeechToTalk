@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Image, StyleSheet, useColorScheme, TouchableOpacity, Animated } from 'react-native';
+import React from 'react';
+import { View, Image, StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '../constants/Colors';
@@ -10,44 +10,7 @@ export function AppHeader() {
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
   
-  // Animation pour les icônes
-  const [translateAnim] = useState(new Animated.Value(0));
-  const [micAnim] = useState(new Animated.Value(1));
-  
-  // Animation subtile pour les icônes
-  useEffect(() => {
-    // Animation pour l'icône de traduction
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(translateAnim, {
-          toValue: 1,
-          duration: 2000,
-          useNativeDriver: true
-        }),
-        Animated.timing(translateAnim, {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true
-        })
-      ])
-    ).start();
-    
-    // Animation pour l'icône de microphone
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(micAnim, {
-          toValue: 1.2,
-          duration: 1500,
-          useNativeDriver: true
-        }),
-        Animated.timing(micAnim, {
-          toValue: 1,
-          duration: 1500,
-          useNativeDriver: true
-        })
-      ])
-    ).start();
-  }, [micAnim, translateAnim]);
+  // Les animations ont été supprimées
   
   const handleMenuPress = () => {
     // Fonction pour gérer l'ouverture du menu
@@ -73,14 +36,6 @@ export function AppHeader() {
           style={styles.logo}
           resizeMode="contain"
         />
-        <View style={styles.iconContainer}>
-          <Animated.View style={{ transform: [{ scale: translateAnim }] }}>
-            <MaterialCommunityIcons name="translate" size={22} color={colors.primary} />
-          </Animated.View>
-          <Animated.View style={[styles.micIcon, { transform: [{ scale: micAnim }] }]}>
-            <MaterialCommunityIcons name="microphone" size={22} color={colors.secondary} />
-          </Animated.View>
-        </View>
       </View>
       
       <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
@@ -119,16 +74,9 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   logo: {
-    height: 42,
-    width: 125,
-    marginRight: 8,
+    height: 50,
+    width: 150,
+    marginRight: 0,
   },
-  iconContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginLeft: 10,
-  },
-  micIcon: {
-    marginLeft: 8,
-  }
+  // Les styles des icônes ont été supprimés car les icônes ne sont plus utilisées
 });

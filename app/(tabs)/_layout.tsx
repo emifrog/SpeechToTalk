@@ -1,6 +1,6 @@
 import { Tabs } from 'expo-router';
-import React, { useState, useEffect } from 'react';
-import { Platform, useColorScheme, View, Text, StyleSheet, Animated } from 'react-native';
+import React, { useState } from 'react';
+import { Platform, useColorScheme, View, Text, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
@@ -20,39 +20,12 @@ const TabBadge = ({ count, color }: { count: number; color: string }) => {
   );
 };
 
-// Composant d'indicateur de progression
+// Composant d'indicateur de progression statique (sans animation)
 const LoadingIndicator = ({ isLoading, color }: { isLoading: boolean; color: string }) => {
-  const [fadeAnim] = useState(new Animated.Value(0));
-  
-  useEffect(() => {
-    if (isLoading) {
-      Animated.loop(
-        Animated.sequence([
-          Animated.timing(fadeAnim, {
-            toValue: 1,
-            duration: 800,
-            useNativeDriver: true
-          }),
-          Animated.timing(fadeAnim, {
-            toValue: 0.3,
-            duration: 800,
-            useNativeDriver: true
-          })
-        ])
-      ).start();
-    } else {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true
-      }).start();
-    }
-  }, [isLoading, fadeAnim]);
-  
   if (!isLoading) return null;
   
   return (
-    <Animated.View style={[styles.loadingIndicator, { backgroundColor: color, opacity: fadeAnim }]} />
+    <View style={[styles.loadingIndicator, { backgroundColor: color }]} />
   );
 };
 

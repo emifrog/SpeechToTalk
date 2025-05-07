@@ -1,4 +1,4 @@
-# SpeechToTalk 🎤 ➡️ 💬
+# SpeechToTalk 💬
 
 ## À propos de l'application
 
@@ -19,7 +19,7 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel qui 
 
    ```bash
    git clone https://github.com/votre-nom/SpeechToTalk.git
-   cd SpeechToTalk/SpeechTranslator
+   cd SpeechToTalk
    ```
 
 2. Installez les dépendances

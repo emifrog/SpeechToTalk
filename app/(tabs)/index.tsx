@@ -572,7 +572,7 @@ function HomeScreen() {
     const setupTextToSpeechInternal = async () => {
       try {
         // Vérifier si le module TTS est disponible
-        if (!Tts) {
+        if (typeof Tts === 'undefined') {
           console.error('Module TTS non disponible');
           return;
         }
@@ -582,15 +582,31 @@ function HomeScreen() {
           // Attendre un court délai pour s'assurer que le module est chargé
           setTimeout(() => {
             try {
+              // Vérifier si Tts est correctement initialisé
+              if (!Tts) {
+                console.error('TTS module is undefined after timeout');
+                resolve();
+                return;
+              }
+              
               // Configurer les événements pour la synthèse vocale
-              if (Tts && typeof Tts.addEventListener === 'function') {
+              if (typeof Tts.addEventListener === 'function') {
                 Tts.addEventListener('tts-finish', () => console.log('TTS finished'));
                 Tts.addEventListener('tts-error', (err: any) => console.error('TTS error:', err));
+              } else {
+                console.warn('TTS addEventListener function is not available');
               }
               
               // Définir la langue par défaut
-              if (Tts && typeof Tts.setDefaultLanguage === 'function') {
-                Tts.setDefaultLanguage('fr-FR');
+              try {
+                // Vérification plus stricte pour s'assurer que la méthode existe
+                if (Tts && Tts.setDefaultLanguage && typeof Tts.setDefaultLanguage === 'function') {
+                  Tts.setDefaultLanguage('fr-FR');
+                } else {
+                  console.warn('TTS setDefaultLanguage function is not available');
+                }
+              } catch (ttsMethodError) {
+                console.warn('Error accessing TTS.setDefaultLanguage:', ttsMethodError);
               }
               
               resolve();
@@ -598,7 +614,7 @@ function HomeScreen() {
               console.error('TTS setup error in timeout:', setupError);
               resolve(); // Résoudre quand même pour continuer l'exécution
             }
-          }, 500); // Attendre 500ms pour s'assurer que le module est chargé
+          }, 1000); // Augmenter le délai à 1000ms pour s'assurer que le module est chargé
         });
       } catch (error) {
         console.error('TTS setup error:', error);
