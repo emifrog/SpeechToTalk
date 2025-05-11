@@ -1,26 +1,138 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Colors } from '@/constants/Colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import NetInfo from '@react-native-community/netinfo';
+import { Picker } from '@react-native-picker/picker';
+import { Audio } from 'expo-av';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
   ActivityIndicator,
   Alert,
+  Platform,
   SafeAreaView,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
   useColorScheme,
+  View
 } from 'react-native';
-import Voice from '@react-native-voice/voice';
-import Tts from 'react-native-tts';
-import { Picker } from '@react-native-picker/picker';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import NetInfo from '@react-native-community/netinfo';
-import { Audio } from 'expo-av';
-import { Colors } from '@/constants/Colors';
 
 // Importer notre service de traduction
-import { translateText, downloadLanguage, LANGUAGES } from '../../services/translationService';
+import { downloadLanguage, LANGUAGES, translateText } from '../../services/translationService';
+
+// Import conditionnels pour éviter les erreurs dans les environnements non compatibles
+let Voice: any = null;
+let Tts: any = null;
+
+// Vérifier si nous sommes dans un environnement web
+const isWeb = Platform.OS === 'web';
+
+// Type pour les callbacks de Voice
+type VoiceCallbacks = {
+  onSpeechStart?: () => void;
+  onSpeechEnd?: () => void;
+  onSpeechResults?: (result: { value: string[] }) => void;
+  onSpeechError?: (error: any) => void;
+  onSpeechPartialResults?: (result: any) => void;
+  onSpeechVolumeChanged?: (volume: any) => void;
+  onSpeechRecognized?: (recognized: any) => void;
+};
+
+// Créer une référence pour pouvoir accéder aux callbacks depuis l'intérieur des méthodes
+let mockVoiceCallbacks: VoiceCallbacks = {};
+
+// Créer des implémentations factices pour les environnements non compatibles
+const createMockVoice = () => {
+  const mockVoice = {
+    // Méthodes de vérification de disponibilité
+    isAvailable: () => Promise.resolve(true),
+    isSpeechAvailable: () => Promise.resolve(true),
+    getSpeechRecognitionServices: () => Promise.resolve(['mock_service']),
+    
+    // Méthodes de contrôle
+    start: (locale: string) => {
+      console.log('Mock Voice would start with locale:', locale);
+      // Simuler un résultat après un court délai
+      setTimeout(() => {
+        if (mockVoiceCallbacks.onSpeechResults) {
+          mockVoiceCallbacks.onSpeechResults({ value: ['Texte simulé de reconnaissance vocale'] });
+        }
+        if (mockVoiceCallbacks.onSpeechEnd) {
+          mockVoiceCallbacks.onSpeechEnd();
+        }
+      }, 2000);
+      return Promise.resolve();
+    },
+    stop: () => {
+      console.log('Mock Voice would stop');
+      return Promise.resolve();
+    },
+    cancel: () => {
+      console.log('Mock Voice would cancel');
+      return Promise.resolve();
+    },
+    destroy: () => {
+      console.log('Mock Voice would destroy');
+      return Promise.resolve();
+    },
+    
+    // Gestion des événements
+    removeAllListeners: () => {},
+    
+    // Propriétés pour les callbacks
+    set onSpeechStart(callback: (() => void) | null) {
+      mockVoiceCallbacks.onSpeechStart = callback || undefined;
+    },
+    set onSpeechEnd(callback: (() => void) | null) {
+      mockVoiceCallbacks.onSpeechEnd = callback || undefined;
+    },
+    set onSpeechResults(callback: ((result: { value: string[] }) => void) | null) {
+      mockVoiceCallbacks.onSpeechResults = callback || undefined;
+    },
+    set onSpeechError(callback: ((error: any) => void) | null) {
+      mockVoiceCallbacks.onSpeechError = callback || undefined;
+    },
+    set onSpeechPartialResults(callback: ((result: any) => void) | null) {
+      mockVoiceCallbacks.onSpeechPartialResults = callback || undefined;
+    },
+    set onSpeechVolumeChanged(callback: ((volume: any) => void) | null) {
+      mockVoiceCallbacks.onSpeechVolumeChanged = callback || undefined;
+    },
+    set onSpeechRecognized(callback: ((recognized: any) => void) | null) {
+      mockVoiceCallbacks.onSpeechRecognized = callback || undefined;
+    }
+  };
+  
+  return mockVoice;
+};
+
+const createMockTts = () => ({
+  speak: (text: string) => {
+    console.log('Mock TTS would speak:', text);
+    return Promise.resolve();
+  },
+  setDefaultLanguage: () => Promise.resolve(),
+  addEventListener: () => {},
+  removeEventListener: () => {},
+});
+
+// Importer les modules réels seulement si nous ne sommes pas sur le web
+if (!isWeb) {
+  try {
+    // Utilisation de dynamic import pour éviter les erreurs de lint
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Voice = require('@react-native-voice/voice').default;
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    Tts = require('react-native-tts').default;
+  } catch (error) {
+    console.warn('Could not load native modules:', error);
+  }
+}
+
+// Si les modules n'ont pas pu être chargés, utiliser les implémentations factices
+if (!Voice) Voice = createMockVoice();
+if (!Tts) Tts = createMockTts();
 
 // Utilisation des langues définies dans le service de traduction
 
@@ -80,6 +192,11 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     alignItems: 'center',
   },
   titleIcon: {
+    marginRight: 8,
+  },
+  headerLogo: {
+    width: 50,
+    height: 50,
     marginRight: 8,
   },
   headerTitle: {
@@ -470,15 +587,24 @@ function HomeScreen() {
   // Lire le texte traduit (avec useCallback pour éviter les dépendances cycliques)
   const speakText = useCallback(async (text: string) => {
     try {
-      // Vérifier si Tts est disponible et si la méthode speak existe
-      if (!Tts || typeof Tts.speak !== 'function') {
-        console.error('TTS module or speak function is not available');
-        return;
+      // Vérification plus stricte pour s'assurer que Tts et la méthode speak existent
+      try {
+        if (!Tts) {
+          console.error('TTS module is not available');
+          return;
+        }
+        
+        if (typeof Tts.speak !== 'function') {
+          console.error('TTS speak function is not available');
+          return;
+        }
+        
+        // Dans une vraie application, nous utiliserions une API de synthèse vocale plus complète
+        // Pour l'exemple, nous utilisons simplement Tts.speak sans options spécifiques
+        await Tts.speak(text);
+      } catch (speakError) {
+        console.error('Error calling Tts.speak:', speakError);
       }
-      
-      // Dans une vraie application, nous utiliserions une API de synthèse vocale plus complète
-      // Pour l'exemple, nous utilisons simplement Tts.speak sans options spécifiques
-      await Tts.speak(text);
     } catch (error) {
       console.error('TTS error:', error);
     }
@@ -531,6 +657,44 @@ function HomeScreen() {
     // Définir les fonctions à l'intérieur du useEffect pour éviter les dépendances cycliques
     const setupVoiceRecognitionInternal = async () => {
       try {
+        // Vérifier si le module Voice est disponible
+        if (!Voice) {
+          console.error('Voice module is not available');
+          Alert.alert(
+            'Fonctionnalité non disponible',
+            'Le module de reconnaissance vocale n\'est pas disponible sur cet appareil.'
+          );
+          return;
+        }
+
+        // Vérifier la disponibilité de la reconnaissance vocale de manière sécurisée
+        let isVoiceAvailable = false;
+        try {
+          // Essayer d'abord isSpeechAvailable si disponible
+          if (typeof Voice.isSpeechAvailable === 'function') {
+            isVoiceAvailable = await Voice.isSpeechAvailable();
+          } 
+          // Sinon essayer isAvailable
+          else if (typeof Voice.isAvailable === 'function') {
+            isVoiceAvailable = await Voice.isAvailable();
+          }
+          // Si aucune méthode n'est disponible, supposer que la reconnaissance vocale n'est pas disponible
+          else {
+            console.warn('Neither Voice.isSpeechAvailable nor Voice.isAvailable are available');
+            isVoiceAvailable = false;
+          }
+        } catch (availabilityError) {
+          console.error('Error checking voice availability:', availabilityError);
+          isVoiceAvailable = false;
+        }
+        
+        if (!isVoiceAvailable) {
+          console.log('Voice recognition is not available on this device');
+          // Ne pas afficher d'alerte ici pour éviter de perturber l'expérience utilisateur
+          // L'application fonctionnera toujours, mais sans reconnaissance vocale
+          return;
+        }
+        
         // Définir les gestionnaires d'événements selon la documentation officielle
         const onSpeechStart = () => {
           console.log('Speech started');
@@ -555,16 +719,27 @@ function HomeScreen() {
           Alert.alert('Erreur de reconnaissance vocale', 'Veuillez réessayer.');
         };
         
+        // Détacher les anciens gestionnaires d'événements s'ils existent
+        try {
+          if (typeof Voice.removeAllListeners === 'function') {
+            Voice.removeAllListeners();
+          }
+        } catch (removeError) {
+          console.warn('Error removing Voice listeners:', removeError);
+        }
+        
         // Attacher les gestionnaires d'événements
         Voice.onSpeechStart = onSpeechStart;
         Voice.onSpeechEnd = onSpeechEnd;
         Voice.onSpeechResults = onSpeechResults;
         Voice.onSpeechError = onSpeechError;
+
+        console.log('Voice recognition initialized successfully');
       } catch (error) {
         console.error('Voice recognition setup error:', error);
         Alert.alert(
           'Fonctionnalité non disponible',
-          'La reconnaissance vocale n&apos;est pas disponible sur cet appareil.'
+          'La reconnaissance vocale n\'est pas disponible sur cet appareil.'
         );
       }
     };
@@ -708,14 +883,107 @@ function HomeScreen() {
   // Démarrer/arrêter la reconnaissance vocale
   const toggleListening = async () => {
     try {
+      // Vérifier d'abord les permissions du microphone
+      const permissionGranted = await requestMicrophonePermission();
+      if (!permissionGranted) {
+        console.log('Microphone permission not granted');
+        return;
+      }
+
       if (isListening) {
-        await Voice.stop();
-        setIsListening(false);
+        // Arrêter la reconnaissance vocale
+        if (!Voice) {
+          console.error('Voice module is not available');
+          setIsListening(false);
+          return;
+        }
+        
+        if (typeof Voice.stop !== 'function') {
+          console.error('Voice stop function is not available');
+          setIsListening(false);
+          return;
+        }
+        
+        try {
+          await Voice.stop();
+          console.log('Voice recognition stopped successfully');
+        } catch (stopError) {
+          console.error('Error stopping voice recognition:', stopError);
+        } finally {
+          setIsListening(false);
+        }
       } else {
+        // Démarrer la reconnaissance vocale
         setSpokenText('');
         console.log('Starting voice recognition in language:', sourceLanguage);
-        await Voice.start(sourceLanguage);
-        setIsListening(true);
+        
+        // Vérifier si Voice est disponible et si la méthode start existe
+        if (!Voice) {
+          console.error('Voice recognition module is not available');
+          Alert.alert('Erreur', 'Le module de reconnaissance vocale n\'est pas disponible.');
+          return;
+        }
+        
+        if (typeof Voice.start !== 'function') {
+          console.error('Voice start function is not available');
+          Alert.alert('Erreur', 'La fonction de démarrage de la reconnaissance vocale n\'est pas disponible.');
+          return;
+        }
+        
+        try {
+          // Vérifier si la reconnaissance vocale est disponible
+          if (typeof Voice.isAvailable === 'function') {
+            const isAvailable = await Voice.isAvailable();
+            if (!isAvailable) {
+              console.error('Voice recognition is not available on this device');
+              Alert.alert('Erreur', 'La reconnaissance vocale n\'est pas disponible sur cet appareil.');
+              return;
+            }
+          }
+          
+          // Réinitialiser les écouteurs d'événements pour éviter les problèmes
+          try {
+            if (typeof Voice.removeAllListeners === 'function') {
+              Voice.removeAllListeners();
+              
+              // Réattacher les gestionnaires d'événements
+              Voice.onSpeechStart = () => console.log('Speech started');
+              Voice.onSpeechEnd = () => {
+                console.log('Speech ended');
+                setIsListening(false);
+              };
+              Voice.onSpeechResults = (event: any) => {
+                if (event.value && event.value.length > 0) {
+                  const recognizedText = event.value[0];
+                  setSpokenText(recognizedText);
+                  translateTextCallback(recognizedText);
+                }
+              };
+              Voice.onSpeechError = (error: any) => {
+                console.error('Speech error:', error);
+                setIsListening(false);
+                Alert.alert('Erreur de reconnaissance vocale', 'Veuillez réessayer.');
+              };
+            }
+          } catch (resetError) {
+            console.warn('Error resetting Voice listeners:', resetError);
+          }
+          
+          // Démarrer la reconnaissance vocale avec un délai pour s'assurer que tout est prêt
+          setTimeout(async () => {
+            try {
+              await Voice.start(sourceLanguage);
+              console.log('Voice recognition started successfully');
+              setIsListening(true);
+            } catch (delayedStartError) {
+              console.error('Error starting voice recognition after delay:', delayedStartError);
+              Alert.alert('Erreur', 'Impossible de démarrer la reconnaissance vocale. Veuillez réessayer.');
+            }
+          }, 500);
+        } catch (startError) {
+          console.error('Error starting voice recognition:', startError);
+          Alert.alert('Erreur', 'Impossible de démarrer la reconnaissance vocale. Vérifiez que vous avez accordé les permissions nécessaires.');
+        }
       }
     } catch (error) {
       console.error('Toggle listening error:', error);
@@ -772,16 +1040,15 @@ function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <ScrollView style={styles.scrollContainer} contentContainerStyle={{paddingBottom: 20}}>
-      {/* En-tête */}
+      {/* En-tête 
       <View style={styles.header}>
         <View style={styles.titleContainer}>
-          <MaterialCommunityIcons
-            name="translate"
-            size={28}
-            color={colors.primary}
-            style={styles.titleIcon}
+          <Image
+            source={require('@/assets/images/talk-logo.png')}
+            style={styles.headerLogo}
+            resizeMode="contain"
           />
-          <Text style={styles.headerTitle}>Traducteur d&apos;Urgence</Text>
+          <Text style={styles.headerTitle}>Speech To Talk</Text>
         </View>
         <View style={styles.connectionStatus}>
           <MaterialCommunityIcons
@@ -789,12 +1056,9 @@ function HomeScreen() {
             size={18}
             color={isConnected ? colors.success : colors.error}
           />
-          <Text style={styles.connectionText}>
-            {isConnected ? 'En ligne' : 'Hors ligne'}
-          </Text>
         </View>
       </View>
-
+      */}
       {/* Sélecteurs de langue */}
       <View style={styles.languageSelectors}>
         <View style={styles.languageCard}>
@@ -833,7 +1097,13 @@ function HomeScreen() {
                 onValueChange={(value) => {
                   setTargetLanguage(value);
                   // Configurer la langue pour TTS (utiliser speak pour réinitialiser)
-                  Tts.speak("");
+                  try {
+                    if (Tts && typeof Tts.speak === 'function') {
+                      Tts.speak("");
+                    }
+                  } catch (error) {
+                    console.warn('Error resetting TTS:', error);
+                  }
                 } }
                 dropdownIconColor="#00838f"
               >

@@ -1,7 +1,8 @@
-import React from 'react';
-import { View, Image, StyleSheet, useColorScheme, TouchableOpacity } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
+import React, { useEffect, useState } from 'react';
+import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
 
 export function AppHeader() {
@@ -9,6 +10,20 @@ export function AppHeader() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
+  
+  // État pour suivre la connexion internet
+  const [isConnected, setIsConnected] = useState(true);
+  
+  // Vérifier l'état de la connexion internet
+  useEffect(() => {
+    const unsubscribe = NetInfo.addEventListener(state => {
+      setIsConnected(state.isConnected !== null ? state.isConnected : true);
+    });
+    
+    return () => {
+      unsubscribe();
+    };
+  }, []);
   
   // Les animations ont été supprimées
   
@@ -26,21 +41,31 @@ export function AppHeader() {
   
   return (
     <View style={[styles.container, { paddingTop: insets.top, backgroundColor: isDark ? '#1a1a1a' : 'white', borderBottomColor: colors.border }]}>
-      <TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
+      {/*<TouchableOpacity style={styles.menuButton} onPress={handleMenuPress}>
         <MaterialCommunityIcons name="menu" size={24} color={colors.primary} />
-      </TouchableOpacity>
-      
-      <View style={styles.logoContainer}>
-        <Image 
-          source={require('../assets/images/talk-logo.png')} 
-          style={styles.logo}
-          resizeMode="contain"
-        />
-      </View>
-      
+      </TouchableOpacity>*/}
       <TouchableOpacity style={styles.helpButton} onPress={handleHelpPress}>
         <MaterialCommunityIcons name="help-circle" size={24} color={colors.primary} />
       </TouchableOpacity>
+      
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
+
+        <View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 6 }}>
+          <Image
+            source={require('../assets/images/talk-logo2.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+        <View style={{ position: 'absolute', right: 12, top: 20 }}>
+          <MaterialCommunityIcons
+            name={isConnected ? 'wifi' : 'wifi-off'}
+            size={24}
+            color={isConnected ? colors.success : colors.error}
+          />
+        </View>
+      </View>    
+
     </View>
   );
 }
@@ -77,6 +102,15 @@ const styles = StyleSheet.create({
     height: 50,
     width: 150,
     marginRight: 0,
+  },
+  connectionStatus: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 131, 143, 0.1)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    marginTop: 5,
   },
   // Les styles des icônes ont été supprimés car les icônes ne sont plus utilisées
 });
