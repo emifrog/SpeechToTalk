@@ -1,0 +1,3 @@
+Je souhaiterais ajouter la fonctionnalité qui permet de traduire des photos et des fichiers.
+
+Déplacer l'icone des parametres et la mettre dans l'ecran aide.

@@ -1,13 +1,13 @@
+import { Colors } from '@/constants/Colors';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, useColorScheme, View, Text, StyleSheet } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { Colors } from '@/constants/Colors';
 
+import { AppHeader } from '@/components/AppHeader';
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
-import { AppHeader } from '@/components/AppHeader';
 
 // Composant Badge personnalisé pour les onglets
 const TabBadge = ({ count, color }: { count: number; color: string }) => {
@@ -82,13 +82,24 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
+        name="media"
+        options={{
+          title: 'Photos/Fichiers',
+          tabBarIcon: ({ color }) => (
+            <View style={styles.tabIconContainer}>
+              <MaterialCommunityIcons name="file-image" size={28} color={color} />
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
         name="explore"
         options={{
           title: 'Phrases',
           tabBarIcon: ({ color }) => (
             <View style={styles.tabIconContainer}>
               <MaterialCommunityIcons name="message-text" size={28} color={color} />
-              <TabBadge count={phrasesNotifications} color={colors.secondary} />
+              {/*<TabBadge count={phrasesNotifications} color={colors.secondary} />*/}  
             </View>
           ),
         }}

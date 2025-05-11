@@ -8,15 +8,31 @@
     "scheme": "speechtranslator",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "permissions": [
+      "camera",
+      "mediaLibrary",
+      "documentPicker"
+    ],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Cette application nécessite l'accès à votre appareil photo pour prendre des photos à traduire.",
+        "NSPhotoLibraryUsageDescription": "Cette application nécessite l'accès à votre galerie pour sélectionner des images à traduire.",
+        "NSMicrophoneUsageDescription": "Cette application nécessite l'accès à votre microphone pour la reconnaissance vocale."
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/talk-logo.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
     },
     "web": {
       "bundler": "metro",
@@ -33,7 +49,10 @@
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
-      ]
+      ],
+      "expo-image-picker",
+      "expo-document-picker",
+      "expo-file-system"
     ],
     "experiments": {
       "typedRoutes": true
