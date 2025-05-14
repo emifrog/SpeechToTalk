@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { Alert } from 'react-native';
-import { GOOGLE_CLOUD_API_KEY } from '../config/keys';
+import { GOOGLE_CLOUD_API_KEY } from '../config';
 
 // API Google Cloud Translation
 // La clé API est stockée de manière sécurisée dans ../config/keys.ts

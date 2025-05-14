@@ -81,18 +81,7 @@ export default function TabLayout() {
           ),
         }}
       />
-      <Tabs.Screen
-        name="media"
-        options={{
-          title: 'Photos/Fichiers',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabIconContainer}>
-              <MaterialCommunityIcons name="file-image" size={28} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
+            <Tabs.Screen
         name="explore"
         options={{
           title: 'Phrases',
@@ -100,6 +89,17 @@ export default function TabLayout() {
             <View style={styles.tabIconContainer}>
               <MaterialCommunityIcons name="message-text" size={28} color={color} />
               {/*<TabBadge count={phrasesNotifications} color={colors.secondary} />*/}  
+            </View>
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="media"
+        options={{
+          title: 'Photos/Fichiers',
+          tabBarIcon: ({ color }) => (
+            <View style={styles.tabIconContainer}>
+              <MaterialCommunityIcons name="file-image" size={28} color={color} />
             </View>
           ),
         }}

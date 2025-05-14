@@ -18,7 +18,7 @@ import { translateText, LANGUAGES } from '../services/translationService';
 import { Picker } from '@react-native-picker/picker';
 import { Collapsible } from './Collapsible';
 import NetInfo from '@react-native-community/netinfo';
-import { GOOGLE_CLOUD_API_KEY } from '../config/keys';
+import { GOOGLE_CLOUD_API_KEY } from '../config';
 
 // Service de reconnaissance de texte utilisant l'API Google Cloud Vision
 const recognizeTextFromImage = async (imageUri: string): Promise<string> => {
