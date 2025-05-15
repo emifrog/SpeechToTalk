@@ -1,24 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-  ActivityIndicator,
-  ScrollView,
-  Alert,
-  Platform,
-} from 'react-native';
-import { Image } from 'expo-image';
-import * as ImagePicker from 'expo-image-picker';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
+import NetInfo from '@react-native-community/netinfo';
+import { Picker } from '@react-native-picker/picker';
 import * as DocumentPicker from 'expo-document-picker';
 import * as FileSystem from 'expo-file-system';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { translateText, LANGUAGES } from '../services/translationService';
-import { Picker } from '@react-native-picker/picker';
-import { Collapsible } from './Collapsible';
-import NetInfo from '@react-native-community/netinfo';
+import { Image } from 'expo-image';
+import * as ImagePicker from 'expo-image-picker';
+import React, { useEffect, useState } from 'react';
+import {
+  ActivityIndicator,
+  Alert,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { GOOGLE_CLOUD_API_KEY } from '../config';
+import { Theme } from '../constants/Theme';
+import { LANGUAGES, translateText } from '../services/translationService';
+import { Collapsible } from './Collapsible';
 
 // Service de reconnaissance de texte utilisant l'API Google Cloud Vision
 const recognizeTextFromImage = async (imageUri: string): Promise<string> => {
@@ -326,10 +327,11 @@ const MediaTranslator: React.FC = () => {
   }, [targetLang, recognizedText, retranslate]);
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Traduction de médias</Text>
-      </View>
+    <ScrollView 
+      style={styles.container} 
+      contentContainerStyle={styles.contentContainer}
+      showsVerticalScrollIndicator={false}
+    >
       
       {/* Sélection des langues */}
       <View style={styles.languageSelectionContainer}>
@@ -345,6 +347,19 @@ const MediaTranslator: React.FC = () => {
             ))}
           </Picker>
         </View>
+        
+        <TouchableOpacity 
+          style={styles.swapLanguageButton}
+          onPress={() => {
+            // Échanger les langues source et cible
+            const temp = sourceLang;
+            setSourceLang(targetLang);
+            setTargetLang(temp);
+          }}
+          activeOpacity={0.7}
+        >
+          <MaterialCommunityIcons name="swap-horizontal" size={20} color="#fff" />
+        </TouchableOpacity>
         
         <View style={styles.languagePickerContainer}>
           <Text style={styles.languageLabel}>Vers :</Text>
@@ -362,18 +377,30 @@ const MediaTranslator: React.FC = () => {
       
       {/* Boutons d'action */}
       <View style={styles.actionButtonsContainer}>
-        <TouchableOpacity style={styles.actionButton} onPress={takePhoto}>
-          <MaterialCommunityIcons name="camera" size={24} color="#fff" />
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={takePhoto}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="camera" size={28} color="#fff" />
           <Text style={styles.actionButtonText}>Prendre une photo</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.actionButton} onPress={pickImage}>
-          <MaterialCommunityIcons name="image" size={24} color="#fff" />
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={pickImage}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="image" size={28} color="#fff" />
           <Text style={styles.actionButtonText}>Choisir une image</Text>
         </TouchableOpacity>
         
-        <TouchableOpacity style={styles.actionButton} onPress={pickDocument}>
-          <MaterialCommunityIcons name="file-document" size={24} color="#fff" />
+        <TouchableOpacity 
+          style={styles.actionButton} 
+          onPress={pickDocument}
+          activeOpacity={0.8}
+        >
+          <MaterialCommunityIcons name="file-document" size={28} color="#fff" />
           <Text style={styles.actionButtonText}>Choisir un document</Text>
         </TouchableOpacity>
       </View>
@@ -416,16 +443,60 @@ const MediaTranslator: React.FC = () => {
       {/* Résultats de la reconnaissance et de la traduction */}
       {recognizedText && !isProcessing && (
         <View style={styles.resultsContainer}>
-          <Collapsible title="Texte détecté">
-            <ScrollView style={styles.textScrollView}>
-              <Text style={styles.recognizedText}>{recognizedText}</Text>
-            </ScrollView>
+          <Collapsible 
+            title="Texte détecté" 
+            titleStyle={styles.collapsibleTitle}
+            containerStyle={styles.collapsibleContainer}
+          >
+            <View style={styles.textContainer}>
+              <ScrollView style={styles.textScrollView}>
+                <Text style={styles.recognizedText}>{recognizedText}</Text>
+              </ScrollView>
+              {recognizedText.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.copyButton}
+                  onPress={() => {
+                    if (Platform.OS === 'web') {
+                      // Pour le web
+                      navigator.clipboard?.writeText?.(recognizedText);
+                    } else {
+                      // Pour les plateformes mobiles
+                      Alert.alert('Copié', 'Le texte a été copié dans le presse-papiers');
+                    }
+                  }}
+                >
+                  <MaterialCommunityIcons name="content-copy" size={18} color="#5b7fc0" />
+                </TouchableOpacity>
+              )}
+            </View>
           </Collapsible>
           
-          <Collapsible title="Traduction">
-            <ScrollView style={styles.textScrollView}>
-              <Text style={styles.translatedText}>{translatedText}</Text>
-            </ScrollView>
+          <Collapsible 
+            title="Traduction" 
+            titleStyle={styles.collapsibleTitle}
+            containerStyle={styles.collapsibleContainer}
+          >
+            <View style={styles.textContainer}>
+              <ScrollView style={styles.textScrollView}>
+                <Text style={styles.translatedText}>{translatedText}</Text>
+              </ScrollView>
+              {translatedText.length > 0 && (
+                <TouchableOpacity 
+                  style={styles.copyButton}
+                  onPress={() => {
+                    if (Platform.OS === 'web') {
+                      // Pour le web
+                      navigator.clipboard?.writeText?.(translatedText);
+                    } else {
+                      // Pour les plateformes mobiles
+                      Alert.alert('Copié', 'La traduction a été copiée dans le presse-papiers');
+                    }
+                  }}
+                >
+                  <MaterialCommunityIcons name="content-copy" size={18} color="#5b7fc0" />
+                </TouchableOpacity>
+              )}
+            </View>
           </Collapsible>
         </View>
       )}
@@ -451,83 +522,107 @@ const MediaTranslator: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f5f5f5',
+    backgroundColor: Theme.colors.background,
   },
   contentContainer: {
-    padding: 16,
-  },
-  header: {
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    textAlign: 'center',
+    padding: Theme.spacing.md,
+    paddingTop: Theme.spacing.sm,
   },
   languageSelectionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    alignItems: 'center',
+    marginBottom: 60,
+    position: 'relative',
   },
   languagePickerContainer: {
     flex: 1,
-    marginHorizontal: 4,
+    marginHorizontal: 6,
   },
   languageLabel: {
-    fontSize: 16,
-    marginBottom: 4,
-    color: '#555',
+    fontSize: Theme.typography.fontSize.md,
+    marginBottom: Theme.spacing.xs,
+    color: Theme.colors.primary,
+    fontWeight: Theme.typography.fontWeight.semiBold as '600',
   },
   languagePicker: {
-    backgroundColor: '#fff',
-    borderRadius: 8,
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.borderRadius.md,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: Theme.colors.border.light,
+    ...Theme.shadows.small,
+  },
+  swapLanguageButton: {
+    position: 'absolute',
+    top: 60,
+    left: '50%',
+    marginLeft: -18,
+    backgroundColor: Theme.colors.secondary,
+    width: Theme.buttons.icon.small.size,
+    height: Theme.buttons.icon.small.size,
+    borderRadius: Theme.buttons.icon.small.borderRadius,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+    ...Theme.shadows.medium,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
+    marginTop: 10,
   },
   actionButton: {
     flex: 1,
-    backgroundColor: '#4a6fa5',
-    padding: 12,
-    borderRadius: 8,
+    backgroundColor: Theme.colors.primary,
+    padding: Theme.spacing.md - 2,
+    borderRadius: Theme.borderRadius.md,
     alignItems: 'center',
-    marginHorizontal: 4,
+    marginHorizontal: Theme.spacing.xs,
     flexDirection: 'column',
+    ...Theme.shadows.medium,
+    transform: [{ scale: 1 }],
   },
   actionButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    marginTop: 4,
+    color: Theme.colors.text.onPrimary,
+    fontSize: Theme.typography.fontSize.sm - 1,
+    fontWeight: Theme.typography.fontWeight.semiBold as '600',
+    marginTop: Theme.spacing.xs,
     textAlign: 'center',
   },
   mediaPreviewContainer: {
     position: 'relative',
-    marginBottom: 16,
-    borderRadius: 8,
+    marginBottom: 20,
+    borderRadius: 16,
     overflow: 'hidden',
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
   },
   mediaPreview: {
     width: '100%',
-    height: 200,
+    height: 220,
   },
   documentPreviewContainer: {
     position: 'relative',
-    marginBottom: 16,
-    padding: 16,
-    borderRadius: 8,
+    marginBottom: 20,
+    padding: 18,
+    borderRadius: 16,
     backgroundColor: '#fff',
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
     flexDirection: 'row',
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 4,
   },
   documentName: {
     flex: 1,
@@ -546,58 +641,102 @@ const styles = StyleSheet.create({
   loadingContainer: {
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 24,
+    padding: 30,
+    marginVertical: 10,
   },
   loadingText: {
-    marginTop: 8,
+    marginTop: 12,
     fontSize: 16,
-    color: '#555',
+    color: '#00838f',
+    fontWeight: '500',
+    letterSpacing: 0.3,
   },
   resultsContainer: {
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  collapsibleTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#2c3e50',
+  },
+  collapsibleContainer: {
+    marginBottom: 12,
+  },
+  textContainer: {
+    position: 'relative',
+    marginBottom: 8,
   },
   textScrollView: {
     maxHeight: 150,
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
+    padding: 16,
+    paddingRight: 40, // Espace pour le bouton de copie
+    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 2,
+  },
+  copyButton: {
+    position: 'absolute',
+    top: 8,
+    right: 8,
+    backgroundColor: '#f8f9fa',
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#00838f',
   },
   recognizedText: {
     fontSize: 16,
     color: '#333',
-    lineHeight: 24,
+    lineHeight: 26,
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   translatedText: {
     fontSize: 16,
-    color: '#333',
-    lineHeight: 24,
+    color: '#2c3e50',
+    lineHeight: 26,
     fontWeight: '500',
+    fontFamily: Platform.OS === 'ios' ? 'System' : 'sans-serif',
   },
   historyItem: {
     backgroundColor: '#fff',
-    padding: 12,
-    borderRadius: 8,
-    marginBottom: 8,
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 10,
     borderWidth: 1,
-    borderColor: '#ddd',
+    borderColor: '#e0e0e0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+    elevation: 1,
   },
   historyItemTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#4a6fa5',
-    marginBottom: 4,
+    color: '#00838f',
+    marginBottom: 6,
+    letterSpacing: 0.3,
   },
   historyItemText: {
     fontSize: 14,
-    color: '#666',
-    marginBottom: 4,
+    color: '#555',
+    marginBottom: 6,
+    lineHeight: 20,
   },
   historyItemTranslation: {
     fontSize: 14,
-    color: '#333',
+    color: '#2c3e50',
     fontWeight: '500',
+    lineHeight: 20,
   },
 });
 
