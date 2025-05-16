@@ -7,15 +7,15 @@ import { Platform } from 'react-native';
 import { Colors } from './Colors';
 
 // Extraction des couleurs principales pour faciliter l'accès
-const primaryTeal = Colors.light.primary; // #00838f
-const primaryOrange = Colors.light.secondary; // #ff6f00
+const primaryBlue = Colors.light.primary; // #144291
+const primaryRed = Colors.light.secondary; // #d20b12
 
 // Définition du thème pour l'application
 export const Theme = {
   // Couleurs principales
   colors: {
-    primary: primaryTeal,
-    secondary: primaryOrange,
+    primary: primaryBlue,
+    secondary: primaryRed,
     background: '#f8f9fa',
     surface: '#ffffff',
     error: '#F44336',
@@ -105,21 +105,21 @@ export const Theme = {
   // Styles de bouton
   buttons: {
     primary: {
-      backgroundColor: primaryTeal,
+      backgroundColor: primaryBlue,
       textColor: '#ffffff',
       borderRadius: 12,
       padding: 14,
     },
     secondary: {
-      backgroundColor: primaryOrange,
+      backgroundColor: primaryRed,
       textColor: '#ffffff',
       borderRadius: 12,
       padding: 14,
     },
     outline: {
       backgroundColor: 'transparent',
-      textColor: primaryTeal,
-      borderColor: primaryTeal,
+      textColor: primaryBlue,
+      borderColor: primaryBlue,
       borderWidth: 1,
       borderRadius: 12,
       padding: 14,
@@ -145,9 +145,9 @@ export const Theme = {
   
   // Dégradés
   gradients: {
-    primary: ['#005662', '#00838f', '#4fb3bf'] as const,
-    secondary: ['#c43e00', '#ff6f00', '#ffa040'] as const,
-    blended: ['#005662', '#00838f', '#ff6f00'] as const,
+    primary: ['#0c2a5e', '#144291', '#3a67b5'] as const,
+    secondary: ['#9e0000', '#d20b12', '#e63e44'] as const,
+    blended: ['#0c2a5e', '#144291', '#d20b12'] as const,
   },
 };
 

@@ -4,12 +4,14 @@ import React, { useEffect, useState } from 'react';
 import { Image, StyleSheet, TouchableOpacity, useColorScheme, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '../constants/Colors';
+import { useRouter } from 'expo-router';
 
 export function AppHeader() {
   const insets = useSafeAreaInsets();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
+  const router = useRouter();
   
   // État pour suivre la connexion internet
   const [isConnected, setIsConnected] = useState(true);
@@ -34,9 +36,9 @@ export function AppHeader() {
   };
   
   const handleHelpPress = () => {
-    // Fonction pour afficher l'aide
-    console.log('Help pressed');
-    // Ici, vous pourriez implémenter l'affichage d'un écran d'aide ou d'un modal
+    // Naviguer vers la page de feedback et suggestions
+    console.log('Navigating to feedback page');
+    router.push('/feedback');
   };
   
   return (

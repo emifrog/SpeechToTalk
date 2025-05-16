@@ -1,7 +1,7 @@
 Mon application SPEECH TO TALK  qui vise à une traduction vocale automatique en temps réel, embarquée dans un smartphone au profit des chefs d’agrès sapeurs-pompiers qui seraient au contact de personnes ne parlant pas français.
 
 
-- Déplacer l'icone des parametres et la mettre dans l'ecran aide.
+- Déplacer l'icone des paramètres et la mettre dans l'écran aide.
 
 --- SUGGESTIONS D'OPTIMISATION ---
 

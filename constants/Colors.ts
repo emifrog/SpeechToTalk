@@ -1,35 +1,35 @@
 /**
  * Couleurs utilisées dans l'application SpeechToTalk.
  * Les couleurs principales sont basées sur le logo de l'application :
- * - Turquoise/teal : #00838f
- * - Orange : #ff6f00
+ * - Bleu : #144291
+ * - Rouge : #d20b12
  */
 
 // Couleurs principales du logo
-const primaryTeal = '#00838f';
-const primaryOrange = '#ff6f00';
+const primaryBlue = '#144291';
+const primaryRed = '#d20b12';
 
 // Variantes plus claires et plus foncées pour différents éléments de l'interface
-const lightTeal = '#4fb3bf';
-const darkTeal = '#005662';
-const lightOrange = '#ffa040';
-const darkOrange = '#c43e00';
+const lightBlue = '#3a67b5';
+const darkBlue = '#0c2a5e';
+const lightRed = '#e63e44';
+const darkRed = '#9e0000';
 
 export const Colors = {
   light: {
     text: '#11181C',
     background: '#fff',
-    tint: primaryTeal,
-    tintSecondary: primaryOrange,
+    tint: primaryBlue,
+    tintSecondary: primaryRed,
     icon: '#687076',
     tabIconDefault: '#687076',
-    tabIconSelected: primaryTeal,
-    primary: primaryTeal,
-    secondary: primaryOrange,
-    lightPrimary: lightTeal,
-    darkPrimary: darkTeal,
-    lightSecondary: lightOrange,
-    darkSecondary: darkOrange,
+    tabIconSelected: primaryBlue,
+    primary: primaryBlue,
+    secondary: primaryRed,
+    lightPrimary: lightBlue,
+    darkPrimary: darkBlue,
+    lightSecondary: lightRed,
+    darkSecondary: darkRed,
     border: '#e0e0e0',
     success: '#4CAF50',
     error: '#F44336',
@@ -37,17 +37,17 @@ export const Colors = {
   dark: {
     text: '#ECEDEE',
     background: '#151718',
-    tint: lightTeal,
-    tintSecondary: lightOrange,
+    tint: lightBlue,
+    tintSecondary: lightRed,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: lightTeal,
-    primary: primaryTeal,
-    secondary: primaryOrange,
-    lightPrimary: lightTeal,
-    darkPrimary: darkTeal,
-    lightSecondary: lightOrange,
-    darkSecondary: darkOrange,
+    tabIconSelected: lightBlue,
+    primary: primaryBlue,
+    secondary: primaryRed,
+    lightPrimary: lightBlue,
+    darkPrimary: darkBlue,
+    lightSecondary: lightRed,
+    darkSecondary: darkRed,
     border: '#333333',
     success: '#4CAF50',
     error: '#F44336',
