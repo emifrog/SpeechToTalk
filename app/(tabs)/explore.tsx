@@ -1,9 +1,13 @@
 import { Collapsible } from '@/components/Collapsible';
+import { Theme } from '@/constants/Theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
 import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { LANGUAGES, translateText } from '../../services/translationService';
+import { StandardHeader } from '../../components/ui/AppHeader';
+import { AppButton } from '../../components/ui/AppButton';
+import { AppCard } from '../../components/ui/AppCard';
 
 // Import conditionnels pour éviter les erreurs dans les environnements non compatibles
 let Tts: any = null;
@@ -115,6 +119,8 @@ const CATEGORIES: Category[] = [
 ];
 
 export default function EmergencyPhrasesScreen() {
+  const theme = Theme;
+  
   const [translatingPhrase, setTranslatingPhrase] = useState<string | null>(null);
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [isTranslating, setIsTranslating] = useState(false);
@@ -250,39 +256,55 @@ export default function EmergencyPhrasesScreen() {
         style={[
           styles.phraseCard,
           isActive && styles.activeCard,
-          wasLastPlayed && !isActive && styles.lastPlayedCard
+          wasLastPlayed && styles.lastPlayedCard,
+          highVisibilityMode && styles.highVisibilityCard
         ]}
-        onPress={() => handleEmergencyPhrase(phrase)}
-        activeOpacity={0.7}
+        onPress={() => {
+          setLastPlayedPhrase(phrase.fr);
+          handleEmergencyPhrase(phrase);
+        }}
+        disabled={isTranslating}
       >
         <View style={styles.phraseContent}>
-          <Text style={styles.phraseText}>
+          <Text 
+            style={[
+              styles.phraseText, 
+              highVisibilityMode && styles.highVisibilityText
+            ]}
+          >
             {phrase.fr}
           </Text>
-          <Text style={[
-            styles.translationText,
-            isActive && styles.activeTranslation
-          ]}>
-            {isActive ? 
-              <>
-                <MaterialCommunityIcons name="translate" size={16} color="#00838f" />
-                {" Traduction en cours..."}
-              </> : 
-              (phrase.translations[targetLanguage] || "Traduction non disponible")
-            }
-          </Text>
+          
+          {/* Traduction si disponible */}
+          {phrase.translations[targetLanguage] && (
+            <Text 
+              style={[
+                styles.translationText,
+                highVisibilityMode && styles.highVisibilityTranslation
+              ]}
+            >
+              {phrase.translations[targetLanguage]}
+            </Text>
+          )}
         </View>
+        
+        {/* Indicateur de chargement ou bouton de lecture */}
         <TouchableOpacity 
           style={[
             styles.speakButton,
-            isActive && styles.activeSpeakButton
+            isActive && styles.activeSpeakButton,
+            highVisibilityMode && styles.highVisibilitySpeakButton
           ]}
-          onPress={() => speakPhrase(phrase.fr, 'fr')}
+          onPress={() => {
+            setLastPlayedPhrase(phrase.fr);
+            handleEmergencyPhrase(phrase);
+          }}
+          disabled={isTranslating}
         >
           <MaterialCommunityIcons 
             name={isActive ? "volume-vibrate" : "volume-high"} 
             size={24} 
-            color={isActive ? "#FF9800" : "#FFFFFF"} 
+            color={isActive ? theme.colors.secondary : "#FFFFFF"} 
           />
         </TouchableOpacity>
       </TouchableOpacity>
@@ -291,52 +313,64 @@ export default function EmergencyPhrasesScreen() {
 
   return (
     <SafeAreaView style={[styles.container, highVisibilityMode && styles.highVisibilityContainer]}>
-      <View style={[styles.header, highVisibilityMode && styles.highVisibilityHeader]}>
-        <View style={styles.headerContent}>
-          <View style={styles.headerRow}>
-            <View style={styles.titleContainer}>
-              <MaterialCommunityIcons 
-                name="message-text" 
-                size={30} 
-                color="#00838f" 
-                style={styles.titleIcon}
-              />
-              <Text style={styles.headerTitle}>Phrases d&apos;urgence</Text>
-            </View>
-          </View>
-          
-          {/* Sélecteur de langue */}
-          <View style={styles.languageSelector}>
-            <Text style={styles.languageLabel}>Langue:</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={targetLanguage}
-                style={styles.picker}
-                onValueChange={(value) => setTargetLanguage(value)}
-                dropdownIconColor="#00838f"
-              >
-                {LANGUAGES.filter(lang => lang.code !== 'fr').map((lang) => (
-                  <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
-                ))}
-              </Picker>
-            </View>
-          </View>
-        </View>
-      </View>
+      <StandardHeader 
+        title="Phrases d'urgence"
+        showLogo={false}
+      />
       
-      <ScrollView style={styles.scrollView}>
+      <AppCard
+        title="Langue cible"
+        icon="translate"
+        style={styles.languageCard}
+      >
+        <View style={styles.pickerContainer}>
+          <Picker
+            selectedValue={targetLanguage}
+            style={styles.picker}
+            onValueChange={(value) => setTargetLanguage(value)}
+            dropdownIconColor={theme.colors.primary}
+          >
+            {LANGUAGES.filter(lang => lang.code !== 'fr').map((lang) => (
+              <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
+            ))}
+          </Picker>
+        </View>
+        
+        <AppButton
+          title={highVisibilityMode ? "Mode normal" : "Mode haute visibilité"}
+          icon={highVisibilityMode ? "eye-outline" : "eye"}
+          onPress={() => setHighVisibilityMode(!highVisibilityMode)}
+          type="outline"
+          size="small"
+          style={{ marginTop: 10 }}
+        />
+      </AppCard>
+      
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
         {CATEGORIES.map((category) => (
           <Collapsible 
             key={category.id} 
             title={
               <View style={styles.categoryHeader}>
                 <MaterialCommunityIcons 
-                  name={category.icon} 
+                  name={category.icon as any} 
                   size={24} 
-                  color="#00838f" 
+                  color={theme.colors.primary} 
+                  style={styles.categoryIcon} 
                 />
-                <Text style={styles.categoryTitle}>{category.name}</Text>
+                <Text 
+                  style={[
+                    styles.categoryTitle,
+                    highVisibilityMode && styles.highVisibilityCategoryTitle
+                  ]}
+                >
+                  {category.name}
+                </Text>
               </View>
+            }
+            containerStyle={highVisibilityMode ? 
+              {...styles.categoryContainer, ...styles.highVisibilityCategoryContainer} : 
+              styles.categoryContainer
             }
           >
             <View style={styles.phrasesContainer}>
@@ -443,6 +477,23 @@ const styles = StyleSheet.create({
     color: '#333',
     marginLeft: 10,
   },
+  categoryIcon: {
+    marginRight: 5,
+  },
+  highVisibilityCategoryTitle: {
+    color: '#FF9800',
+    fontWeight: '700',
+  },
+  categoryContainer: {
+    marginBottom: 16,
+    borderRadius: 12,
+    overflow: 'hidden',
+  },
+  highVisibilityCategoryContainer: {
+    backgroundColor: '#1e1e1e',
+    borderColor: '#333333',
+    borderWidth: 1,
+  },
   phrasesContainer: {
     marginTop: 8,
     marginBottom: 16,
@@ -508,6 +559,9 @@ const styles = StyleSheet.create({
   activeSpeakButton: {
     backgroundColor: '#FF9800',
     transform: [{ scale: 1.1 }],
+  },
+  languageCard: {
+    marginBottom: 16,
   },
   infoContainer: {
     backgroundColor: '#ffffff',

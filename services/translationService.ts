@@ -25,22 +25,22 @@ export const translateText = async (
       return text;
     }
     
-    // Essayer de récupérer la traduction du cache d'abord
+    // Essayer de rÃ©cupÃ©rer la traduction du cache d'abord
     const cachedTranslation = await getTranslationFromCache(text, sourceLang, targetLang);
     if (cachedTranslation) {
       console.log('Using cached translation');
       return cachedTranslation;
     }
     
-    // Vérifier la connexion internet
+    // VÃ©rifier la connexion internet
     const netInfo = await NetInfo.fetch();
     const isConnected = netInfo.isConnected;
     
-    // Vérifier d'abord si nous avons une traduction prédéfinie pour les phrases d'urgence courantes
+    // VÃ©rifier d'abord si nous avons une traduction prÃ©dÃ©finie pour les phrases d'urgence courantes
     if (DEMO_TRANSLATIONS[text] && DEMO_TRANSLATIONS[text][targetLang]) {
       const translation = DEMO_TRANSLATIONS[text][targetLang];
       // Stocker la traduction dans le cache pour une utilisation future
-      await storeTranslationInCache(text, translation, sourceLang, targetLang, true); // Marqué comme phrase d'urgence
+      await storeTranslationInCache(text, translation, sourceLang, targetLang, true); // MarquÃ© comme phrase d'urgence
       return translation;
     }
     
@@ -64,66 +64,66 @@ export const translateText = async (
 };
 
 // API Google Cloud Translation
-// La clé API est stockée de manière sécurisée dans ../config/keys.ts
-// et ce fichier est ajouté au .gitignore pour éviter de partager la clé
+// La clÃ© API est stockÃ©e de maniÃ¨re sÃ©curisÃ©e dans ../config/keys.ts
+// et ce fichier est ajoutÃ© au .gitignore pour Ã©viter de partager la clÃ©
 
-// Dictionnaire de traductions prédéfinies pour la démonstration
+// Dictionnaire de traductions prÃ©dÃ©finies pour la dÃ©monstration
 const DEMO_TRANSLATIONS: Record<string, Record<string, string>> = {
   'fr': {
     'en': 'English',
-    'es': 'Español',
+    'es': 'EspaÃ±ol',
     'de': 'Deutsch',
     'it': 'Italiano',
-    'ar': 'العربية',
-    'zh': '中文',
-    'ru': 'Русский'
+    'ar': 'Ø§Ù„Ø¹Ø±Ø¨ÙŠØ©',
+    'zh': 'ä¸­æ–‡',
+    'ru': 'Ð ÑƒÑ�Ñ�ÐºÐ¸Ð¹'
   },
-  'Où avez-vous mal ?': {
+  'OÃ¹ avez-vous mal ?': {
     'en': 'Where does it hurt?',
-    'es': '¿Dónde le duele?',
+    'es': 'Â¿DÃ³nde le duele?',
     'de': 'Wo haben Sie Schmerzen?',
     'it': 'Dove le fa male?',
-    'ar': 'أين يؤلمك؟',
-    'zh': '哪里疼？',
-    'ru': 'Где у вас болит?'
+    'ar': 'Ø£ÙŠÙ† ÙŠØ¤Ù„Ù…ÙƒØŸ',
+    'zh': 'å“ªé‡Œç–¼ï¼Ÿ',
+    'ru': 'Ð“Ð´Ðµ Ñƒ Ð²Ð°Ñ� Ð±Ð¾Ð»Ð¸Ñ‚?'
   },
-  'Avez-vous des difficultés à respirer ?': {
+  'Avez-vous des difficultÃ©s Ã  respirer ?': {
     'en': 'Do you have trouble breathing?',
-    'es': '¿Tiene dificultad para respirar?',
+    'es': 'Â¿Tiene dificultad para respirar?',
     'de': 'Haben Sie Schwierigkeiten beim Atmen?',
-    'it': 'Ha difficoltà a respirare?',
-    'ar': 'هل تجد صعوبة في التنفس؟',
-    'zh': '您呼吸困难吗？',
-    'ru': 'У вас есть проблемы с дыханием?'
+    'it': 'Ha difficoltÃ  a respirare?',
+    'ar': 'Ù‡Ù„ ØªØ¬Ø¯ ØµØ¹ÙˆØ¨Ø© Ù�ÙŠ Ø§Ù„ØªÙ†Ù�Ø³ØŸ',
+    'zh': 'æ‚¨å‘¼å�¸å›°éš¾å�—ï¼Ÿ',
+    'ru': 'Ð£ Ð²Ð°Ñ� ÐµÑ�Ñ‚ÑŒ Ð¿Ñ€Ð¾Ð±Ð»ÐµÐ¼Ñ‹ Ñ� Ð´Ñ‹Ñ…Ð°Ð½Ð¸ÐµÐ¼?'
   }
 };
 
 // Liste des phrases d'urgence pour les pompiers
 export const EMERGENCY_PHRASES = [
-  { fr: "Où avez-vous mal ?", translations: {} },
-  { fr: "Avez-vous des difficultés à respirer ?", translations: {} },
-  { fr: "Y a-t-il d'autres personnes à l'intérieur ?", translations: {} },
-  { fr: "Avez-vous des allergies ou prenez-vous des médicaments ?", translations: {} },
-  { fr: "Nous sommes là pour vous aider.", translations: {} },
-  { fr: "Restez calme, les secours sont là.", translations: {} },
+  { fr: "OÃ¹ avez-vous mal ?", translations: {} },
+  { fr: "Avez-vous des difficultÃ©s Ã  respirer ?", translations: {} },
+  { fr: "Y a-t-il d'autres personnes Ã  l'intÃ©rieur ?", translations: {} },
+  { fr: "Avez-vous des allergies ou prenez-vous des mÃ©dicaments ?", translations: {} },
+  { fr: "Nous sommes lÃ  pour vous aider.", translations: {} },
+  { fr: "Restez calme, les secours sont lÃ .", translations: {} },
 ];
 
-// Les interfaces TranslationCacheEntry et TranslationCache ont été déplacées dans le fichier types.ts
+// Les interfaces TranslationCacheEntry et TranslationCache ont Ã©tÃ© dÃ©placÃ©es dans le fichier types.ts
 
 // Configuration du cache
 const CACHE_CONFIG = {
-  DEFAULT_SIZE_LIMIT: 500,     // Nombre maximum d'entrées par défaut
+  DEFAULT_SIZE_LIMIT: 500,     // Nombre maximum d'entrÃ©es par dÃ©faut
   CLEANUP_INTERVAL: 86400000,  // Intervalle de nettoyage (24 heures en ms)
   CACHE_VERSION: 1,            // Version actuelle du cache
-  EMERGENCY_PHRASE_RETENTION: 30, // Nombre de jours de rétention pour les phrases d'urgence
-  NORMAL_PHRASE_RETENTION: 7,  // Nombre de jours de rétention pour les phrases normales
+  EMERGENCY_PHRASE_RETENTION: 30, // Nombre de jours de rÃ©tention pour les phrases d'urgence
+  NORMAL_PHRASE_RETENTION: 7,  // Nombre de jours de rÃ©tention pour les phrases normales
 };
 
-// Clé pour stocker le cache dans AsyncStorage
+// ClÃ© pour stocker le cache dans AsyncStorage
 const TRANSLATION_CACHE_KEY = 'translationCache_v1';
 
-// Initialiser ou récupérer le cache de traduction
-const getTranslationCache = async (): Promise<TranslationCache> => {
+// Initialiser ou rÃ©cupÃ©rer le cache de traduction
+export const getTranslationCache = async (): Promise<TranslationCache> => {
   try {
     const cacheJson = await AsyncStorage.getItem(TRANSLATION_CACHE_KEY);
     if (!cacheJson) {
@@ -137,11 +137,11 @@ const getTranslationCache = async (): Promise<TranslationCache> => {
       return newCache;
     }
     
-    // Parser le cache et décompresser les données
+    // Parser le cache et dÃ©compresser les donnÃ©es
     const compressedCache: TranslationCache = JSON.parse(cacheJson);
     const cache = decompressTranslationCache(compressedCache);
     
-    // Vérifier si le cache a besoin d'être nettoyé
+    // VÃ©rifier si le cache a besoin d'Ãªtre nettoyÃ©
     if (Date.now() - cache.lastCleanup > CACHE_CONFIG.CLEANUP_INTERVAL) {
       return await cleanupCache(cache);
     }
@@ -166,13 +166,13 @@ const saveTranslationCache = async (cache: TranslationCache): Promise<void> => {
     const compressedCache = compressTranslationCache(cache);
     await AsyncStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(compressedCache));
     
-    // Optimiser le stockage périodiquement
+    // Optimiser le stockage pÃ©riodiquement
     const now = Date.now();
     const lastOptimization = await AsyncStorage.getItem('lastStorageOptimization');
     const lastOptimizationTime = lastOptimization ? parseInt(lastOptimization) : 0;
     
     if (now - lastOptimizationTime > CACHE_CONFIG.CLEANUP_INTERVAL) {
-      // Lancer l'optimisation en arrière-plan
+      // Lancer l'optimisation en arriÃ¨re-plan
       optimizeTranslationStorage(false).then(() => {
         AsyncStorage.setItem('lastStorageOptimization', now.toString());
       });
@@ -182,7 +182,7 @@ const saveTranslationCache = async (cache: TranslationCache): Promise<void> => {
   }
 };
 
-// Nettoyer le cache en supprimant les entrées expirées ou moins utilisées
+// Nettoyer le cache en supprimant les entrÃ©es expirÃ©es ou moins utilisÃ©es
 const cleanupCache = async (cache: TranslationCache): Promise<TranslationCache> => {
   const now = Date.now();
   
@@ -190,40 +190,40 @@ const cleanupCache = async (cache: TranslationCache): Promise<TranslationCache> 
   const normalExpirationTime = now - (CACHE_CONFIG.NORMAL_PHRASE_RETENTION * 24 * 60 * 60 * 1000);
   const emergencyExpirationTime = now - (CACHE_CONFIG.EMERGENCY_PHRASE_RETENTION * 24 * 60 * 60 * 1000);
   
-  // Filtrer les entrées expirées
+  // Filtrer les entrÃ©es expirÃ©es
   let entries = cache.entries.filter(entry => {
     // Garder les phrases d'urgence plus longtemps
     const expirationTime = entry.isEmergencyPhrase ? emergencyExpirationTime : normalExpirationTime;
     return entry.timestamp > expirationTime;
   });
   
-  // Si le cache dépasse toujours la limite après avoir supprimé les entrées expirées
+  // Si le cache dÃ©passe toujours la limite aprÃ¨s avoir supprimÃ© les entrÃ©es expirÃ©es
   if (entries.length > cache.sizeLimit) {
-    // Trier par utilité (priorité aux phrases d'urgence, puis par nombre d'utilisations et récence)
+    // Trier par utilitÃ© (prioritÃ© aux phrases d'urgence, puis par nombre d'utilisations et rÃ©cence)
     entries.sort((a, b) => {
-      // Priorité aux phrases d'urgence
+      // PrioritÃ© aux phrases d'urgence
       if (a.isEmergencyPhrase && !b.isEmergencyPhrase) return -1;
       if (!a.isEmergencyPhrase && b.isEmergencyPhrase) return 1;
       
       // Puis par nombre d'utilisations
       if (a.useCount !== b.useCount) return b.useCount - a.useCount;
       
-      // Enfin par récence
+      // Enfin par rÃ©cence
       return b.timestamp - a.timestamp;
     });
     
-    // Conserver uniquement les entrées les plus utiles jusqu'à la limite
+    // Conserver uniquement les entrÃ©es les plus utiles jusqu'Ã  la limite
     entries = entries.slice(0, cache.sizeLimit);
   }
   
-  // Mettre à jour le cache
+  // Mettre Ã  jour le cache
   const updatedCache: TranslationCache = {
     ...cache,
     entries,
     lastCleanup: now
   };
   
-  // Sauvegarder le cache nettoyé
+  // Sauvegarder le cache nettoyÃ©
   await saveTranslationCache(updatedCache);
   
   return updatedCache;
@@ -238,10 +238,10 @@ const storeTranslationInCache = async (
   isEmergencyPhrase: boolean = false
 ): Promise<void> => {
   try {
-    // Récupérer le cache existant
+    // RÃ©cupÃ©rer le cache existant
     const cache = await getTranslationCache();
     
-    // Vérifier si cette traduction existe déjà
+    // VÃ©rifier si cette traduction existe dÃ©jÃ 
     const existingEntryIndex = cache.entries.findIndex(
       entry => entry.text === text && 
               entry.sourceLang === sourceLang && 
@@ -251,7 +251,7 @@ const storeTranslationInCache = async (
     const now = Date.now();
     
     if (existingEntryIndex >= 0) {
-      // Mettre à jour l'entrée existante
+      // Mettre Ã  jour l'entrÃ©e existante
       const entry = cache.entries[existingEntryIndex];
       cache.entries[existingEntryIndex] = {
         ...entry,
@@ -261,7 +261,7 @@ const storeTranslationInCache = async (
         isEmergencyPhrase: entry.isEmergencyPhrase || isEmergencyPhrase
       };
     } else {
-      // Ajouter une nouvelle entrée
+      // Ajouter une nouvelle entrÃ©e
       cache.entries.push({
         text,
         translation: translatedText,
@@ -272,28 +272,28 @@ const storeTranslationInCache = async (
         isEmergencyPhrase
       });
       
-      // Si le cache dépasse la limite, le nettoyer
+      // Si le cache dÃ©passe la limite, le nettoyer
       if (cache.entries.length > cache.sizeLimit) {
         await cleanupCache(cache);
         return;
       }
     }
     
-    // Sauvegarder le cache mis à jour
+    // Sauvegarder le cache mis Ã  jour
     await saveTranslationCache(cache);
   } catch (error) {
     console.error('Error storing translation in cache:', error);
   }
 };
 
-// Récupérer une traduction du cache
+// RÃ©cupÃ©rer une traduction du cache
 export const getTranslationFromCache = async (
   text: string,
   sourceLang: string,
   targetLang: string
 ): Promise<string | null> => {
   try {
-    // Récupérer le cache
+    // RÃ©cupÃ©rer le cache
     const cache = await getTranslationCache();
     
     // Rechercher une correspondance exacte
@@ -304,10 +304,10 @@ export const getTranslationFromCache = async (
     );
     
     if (entry) {
-      // Décompresser l'entrée si nécessaire
+      // DÃ©compresser l'entrÃ©e si nÃ©cessaire
       const decompressedEntry = decompressTranslationEntry(entry);
       
-      // Mettre à jour les statistiques d'utilisation
+      // Mettre Ã  jour les statistiques d'utilisation
       entry.useCount += 1;
       entry.timestamp = Date.now();
       await saveTranslationCache(cache);
@@ -322,47 +322,47 @@ export const getTranslationFromCache = async (
   }
 };
 
-// Liste des langues supportées
+// Liste des langues supportÃ©es
 export const LANGUAGES = [
-  { code: 'fr', name: 'Français' },
+  { code: 'fr', name: 'FranÃ§ais' },
   { code: 'en', name: 'Anglais' },
   { code: 'es', name: 'Espagnol' },
   { code: 'de', name: 'Allemand' },
   { code: 'it', name: 'Italien' },
   { code: 'pt', name: 'Portugais' },
-  { code: 'nl', name: 'Néerlandais' },
+  { code: 'nl', name: 'NÃ©erlandais' },
   { code: 'pl', name: 'Polonais' },
   { code: 'ru', name: 'Russe' },
   { code: 'ar', name: 'Arabe' },
   { code: 'zh', name: 'Chinois' },
   { code: 'ja', name: 'Japonais' },
-  { code: 'ko', name: 'Coréen' },
+  { code: 'ko', name: 'CorÃ©en' },
   { code: 'tr', name: 'Turc' },
   { code: 'hi', name: 'Hindi' },
   { code: 'ro', name: 'Roumain' },
   { code: 'uk', name: 'Ukrainien' },
-  { code: 'sv', name: 'Suédois' },
+  { code: 'sv', name: 'SuÃ©dois' },
   { code: 'el', name: 'Grec' }
 ];
 
-// Télécharger une langue pour une utilisation hors ligne
+// TÃ©lÃ©charger une langue pour une utilisation hors ligne
 export const downloadLanguage = async (languageCode: string): Promise<boolean> => {
   try {
-    // Vérifier la connexion internet
+    // VÃ©rifier la connexion internet
     const netInfo = await NetInfo.fetch();
     if (!netInfo.isConnected) {
       console.error('Cannot download language without internet connection');
       return false;
     }
     
-    // Vérifier si la langue est valide
+    // VÃ©rifier si la langue est valide
     const isValidLanguage = LANGUAGES.some(lang => lang.code === languageCode);
     if (!isValidLanguage) {
       console.error(`Invalid language code: ${languageCode}`);
       return false;
     }
     
-    // Stocker la langue comme téléchargée
+    // Stocker la langue comme tÃ©lÃ©chargÃ©e
     const downloadedLanguagesJson = await AsyncStorage.getItem('downloadedLanguages');
     const downloadedLanguages: string[] = downloadedLanguagesJson 
       ? JSON.parse(downloadedLanguagesJson) 
@@ -404,10 +404,10 @@ export const getTranslationCacheStats = async (): Promise<{
     // Compter les phrases d'urgence
     const emergencyPhraseCount = cache.entries.filter(entry => entry.isEmergencyPhrase).length;
     
-    // Calculer la taille du cache non compressé en octets
+    // Calculer la taille du cache non compressÃ© en octets
     const cacheSize = Buffer.byteLength(JSON.stringify(cache));
     
-    // Calculer la taille du cache compressé en octets
+    // Calculer la taille du cache compressÃ© en octets
     const compressedCache = compressTranslationCache(cache);
     const compressedSize = Buffer.byteLength(JSON.stringify(compressedCache));
     
@@ -444,7 +444,7 @@ export const forceStorageOptimization = async (): Promise<{
   savedBytes: number;
 }> => {
   try {
-    // Lancer l'optimisation forcée
+    // Lancer l'optimisation forcÃ©e
     const stats = await optimizeTranslationStorage(true);
     
     if (!stats) {
@@ -455,7 +455,7 @@ export const forceStorageOptimization = async (): Promise<{
       };
     }
     
-    // Calculer les octets économisés
+    // Calculer les octets Ã©conomisÃ©s
     const savedBytes = stats.originalSize - stats.compressedSize;
     
     return {
@@ -470,5 +470,60 @@ export const forceStorageOptimization = async (): Promise<{
       compressionRatio: 1,
       savedBytes: 0
     };
+  }
+};
+
+
+// Fonction pour effacer complètement le cache de traduction
+export const clearTranslationCache = async (): Promise<boolean> => {
+  try {
+    // Créer un nouveau cache vide
+    const emptyCache: TranslationCache = {
+      version: CACHE_CONFIG.CACHE_VERSION,
+      sizeLimit: CACHE_CONFIG.DEFAULT_SIZE_LIMIT,
+      entries: [],
+      lastCleanup: Date.now()
+    };
+    
+    // Sauvegarder le cache vide
+    await saveTranslationCache(emptyCache);
+    
+    return true;
+  } catch (error) {
+    console.error('Error clearing translation cache:', error);
+    return false;
+  }
+};
+
+// Fonction pour définir la limite de taille du cache de traduction
+export const setTranslationCacheLimit = async (limit: number): Promise<boolean> => {
+  try {
+    if (limit < 0) {
+      throw new Error('La limite du cache doit être un nombre positif');
+    }
+    
+    // Stocker la limite dans AsyncStorage
+    await AsyncStorage.setItem('translation_cache_limit', limit.toString());
+    
+    // Récupérer le cache actuel
+    const cache = await getTranslationCache();
+    
+    // Si la nouvelle limite est inférieure au nombre d'entrées actuel,
+    // nettoyer le cache pour respecter la nouvelle limite
+    if (cache.entries.length > limit) {
+      // Trier les entrées par date d'utilisation (les plus récentes en premier)
+      cache.entries.sort((a, b) => b.timestamp - a.timestamp);
+      
+      // Garder seulement les 'limit' entrées les plus récentes
+      cache.entries = cache.entries.slice(0, limit);
+      
+      // Sauvegarder le cache mis à jour
+      await saveTranslationCache(cache);
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error setting translation cache limit:', error);
+    return false;
   }
 };

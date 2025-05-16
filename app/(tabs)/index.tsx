@@ -1,4 +1,8 @@
 import { Colors } from '@/constants/Colors';
+import { Theme } from '@/constants/Theme';
+import { AppButton } from '../../components/ui/AppButton';
+import { StandardHeader } from '../../components/ui/AppHeader';
+import { AppCard } from '../../components/ui/AppCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -219,7 +223,8 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     color: colors.primary,
   },
   languageSelectors: {
-    padding: 10,
+    marginVertical: 10,
+    marginHorizontal: 16,
   },
   languageCard: {
     backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff',
@@ -566,11 +571,34 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     fontStyle: 'italic',
     marginBottom: 4,
   },
+  actionButtonsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginHorizontal: 16,
+    marginBottom: 16,
+  },
+  actionButtonSpacing: {
+    flex: 1,
+    marginHorizontal: 4,
+  },
+  cardContainer: {
+    backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    marginBottom: 10,
+  },
 });
 
 function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const theme = Theme;
   const styles = createStyles(colorScheme, colors);
   const [isListening, setIsListening] = useState(false);
   const [spokenText, setSpokenText] = useState('');
@@ -1039,28 +1067,18 @@ function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      <StandardHeader 
+        showLogo={true}
+        rightIcon={isConnected ? 'wifi' : 'wifi-off'}
+        rightIconColor={isConnected ? theme.colors.primary : theme.colors.error}
+      />
       <ScrollView style={styles.scrollContainer} contentContainerStyle={{paddingBottom: 20}}>
-      {/* En-tête 
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <Image
-            source={require('@/assets/images/talk-logo.png')}
-            style={styles.headerLogo}
-            resizeMode="contain"
-          />
-          <Text style={styles.headerTitle}>Speech To Talk</Text>
-        </View>
-        <View style={styles.connectionStatus}>
-          <MaterialCommunityIcons
-            name={isConnected ? 'wifi' : 'wifi-off'}
-            size={18}
-            color={isConnected ? colors.success : colors.error}
-          />
-        </View>
-      </View>
-      */}
       {/* Sélecteurs de langue */}
-      <View style={styles.languageSelectors}>
+      <AppCard
+        title="Langues"
+        icon="translate"
+        style={styles.languageSelectors}
+      >
         <View style={styles.languageCard}>
           <View style={styles.languageSelector}>
             <Text style={styles.languageLabel}>De:</Text>
@@ -1122,7 +1140,7 @@ function HomeScreen() {
             )}
           </View>
         </View>
-      </View>
+      </AppCard>
 
       {/* Phrases d'urgence prédéfinies */}
       <View style={styles.sectionHeader}>
@@ -1195,7 +1213,11 @@ function HomeScreen() {
       </View>
       
       {/* Texte reconnu et traduit */}
-      <View style={styles.textContainer}>
+      <AppCard
+        title="Texte reconnu"
+        icon="microphone"
+        style={styles.cardContainer}
+      >
         <View style={styles.recognizedTextContainer}>
           <View style={styles.textLabelContainer}>
             <MaterialCommunityIcons name="microphone" size={18} color={colors.primary} style={styles.textLabelIcon} />
@@ -1205,7 +1227,13 @@ function HomeScreen() {
             <Text style={styles.recognizedText}>{spokenText || "Appuyez sur le bouton pour parler..."}</Text>
           </View>
         </View>
+      </AppCard>
 
+      <AppCard
+        title="Traduction"
+        icon="translate"
+        style={styles.cardContainer}
+      >
         <View style={styles.translatedTextContainer}>
           <View style={styles.textLabelContainer}>
             <MaterialCommunityIcons name="translate" size={18} color={colors.primary} style={styles.textLabelIcon} />
@@ -1222,22 +1250,44 @@ function HomeScreen() {
             )}
           </View>
         </View>
-      </View>
+      </AppCard>
       
-      {/* Bouton d'enregistrement */}
-      <View style={styles.recordButtonContainer}>
-        <TouchableOpacity style={[styles.recordButton, isListening && styles.recordingButton]} onPress={toggleListening} disabled={isTranslating} activeOpacity={0.7}>
-          <View style={styles.recordButtonInner}>
-            <MaterialCommunityIcons name={isListening ? "stop" : "microphone"} size={36} color="#fff" />
-          </View>
-        </TouchableOpacity>
-        {isListening && (
-          <View style={styles.recordingStatusContainer}>
-            <View style={styles.recordingIndicator} />
-            <Text style={styles.recordingText}>Écoute en cours...</Text>
-          </View>
-        )}
+      {/* Boutons d'action */}
+      <View style={styles.actionButtonsContainer}>
+        <AppButton
+          title={isListening ? 'Arrêter' : 'Écouter'}
+          icon={isListening ? 'microphone-off' : 'microphone'}
+          onPress={toggleListening}
+          type={isListening ? 'secondary' : 'primary'}
+          style={styles.actionButtonSpacing}
+        />
+
+        <AppButton
+          title="Lire"
+          icon="volume-high"
+          onPress={() => speakText(translatedText)}
+          disabled={!translatedText}
+          type="primary"
+          style={styles.actionButtonSpacing}
+        />
+
+        <AppButton
+          title="Effacer"
+          icon="eraser"
+          onPress={() => {
+            setSpokenText('');
+            setTranslatedText('');
+          }}
+          type="outline"
+          style={styles.actionButtonSpacing}
+        />
       </View>
+      {isListening && (
+        <View style={styles.recordingStatusContainer}>
+          <View style={styles.recordingIndicator} />
+          <Text style={styles.recordingText}>Écoute en cours...</Text>
+        </View>
+      )}
       </ScrollView>
     </SafeAreaView>
   );

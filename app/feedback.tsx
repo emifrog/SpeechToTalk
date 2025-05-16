@@ -1,4 +1,5 @@
 import { Colors } from '@/constants/Colors';
+import { Theme } from '@/constants/Theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
@@ -24,6 +25,7 @@ export default function FeedbackScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
+  const theme = Theme;
   
   const [feedbackType, setFeedbackType] = useState<'suggestion' | 'bug' | 'improvement' | null>(null);
   const [title, setTitle] = useState('');
@@ -114,12 +116,15 @@ export default function FeedbackScreen() {
       <View style={[
         styles.container,
         { 
-          paddingTop: insets.top + 10,
+          paddingTop: insets.top,
           paddingBottom: insets.bottom + 10,
-          backgroundColor: isDark ? colors.background : '#fff'
+          backgroundColor: isDark ? colors.background : theme.colors.background
         }
       ]}>
-        <View style={styles.header}>
+        <View style={[styles.header, { backgroundColor: isDark ? '#1a1a1a' : '#fff' }]}>
+          <TouchableOpacity style={styles.backButton} onPress={() => router.back()}>
+            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.primary} />
+          </TouchableOpacity>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
             <Image
               source={require('../assets/images/talk-logo2.png')}
@@ -127,7 +132,7 @@ export default function FeedbackScreen() {
               resizeMode="contain"
             />
           </View>
-          <View style={{ width: 50 }} />
+          <View style={{ width: 40 }} />
         </View>
         
         <ScrollView style={styles.content} contentContainerStyle={styles.contentContainer}>
@@ -216,9 +221,15 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderBottomWidth: 1,
     borderBottomColor: '#f0f0f0',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 3,
+    elevation: 3,
   },
   backButton: {
     padding: 8,
+    width: 40,
   },
   headerTitle: {
     fontSize: 18,

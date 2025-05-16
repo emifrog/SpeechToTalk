@@ -1,15 +1,16 @@
-import { MaterialCommunityIcons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   StyleSheet,
   Text,
-  TouchableOpacity,
   useColorScheme,
   View
 } from 'react-native';
 import { Colors } from '../constants/Colors';
+import { Theme } from '../constants/Theme';
 import { forceStorageOptimization, getTranslationCacheStats } from '../services/translationService';
+import { AppCard } from './ui/AppCard';
+import { AppButton } from './ui/AppButton';
 
 interface StorageStats {
   totalEntries: number;
@@ -23,6 +24,7 @@ export const StorageOptimizationPanel = () => {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
   const colors = Colors[isDark ? 'dark' : 'light'];
+  const theme = Theme;
   
   const [stats, setStats] = useState<StorageStats | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -101,17 +103,13 @@ export const StorageOptimizationPanel = () => {
   };
   
   return (
-    <View style={[styles.container, { backgroundColor: isDark ? '#2a2a2a' : '#f5f5f5' }]}>
-      <View style={styles.header}>
-        <MaterialCommunityIcons 
-          name="zip-box" 
-          size={24} 
-          color={colors.primary} 
-        />
-        <Text style={[styles.title, { color: colors.text }]}>
-          Compression des données
-        </Text>
-      </View>
+    <AppCard
+      title="Optimisation du stockage"
+      icon="database-check"
+      iconColor={theme.colors.primary}
+      style={styles.container}
+      elevation={3}
+    >
       
       {isLoading ? (
         <ActivityIndicator size="large" color={colors.primary} style={styles.loader} />
@@ -161,24 +159,18 @@ export const StorageOptimizationPanel = () => {
             )}
           </View>
           
-          <TouchableOpacity
-            style={[
-              styles.optimizeButton,
-              { backgroundColor: colors.primary },
-              isOptimizing && { opacity: 0.7 }
-            ]}
-            onPress={optimizeStorage}
-            disabled={isOptimizing}
-          >
-            {isOptimizing ? (
-              <ActivityIndicator size="small" color="#ffffff" />
-            ) : (
-              <>
-                <MaterialCommunityIcons name="refresh" size={20} color="#ffffff" style={styles.buttonIcon} />
-                <Text style={styles.buttonText}>Optimiser le stockage</Text>
-              </>
-            )}
-          </TouchableOpacity>
+          <View style={styles.footer}>
+            <AppButton
+              title="Optimiser maintenant"
+              icon="database-sync"
+              onPress={optimizeStorage}
+              disabled={isOptimizing}
+              loading={isOptimizing}
+              type="primary"
+              size="medium"
+              fullWidth
+            />
+          </View>
           
           <Text style={[styles.infoText, { color: isDark ? '#aaaaaa' : '#666666' }]}>
             La compression des données réduit l&apos;espace de stockage utilisé par les traductions,
@@ -186,25 +178,14 @@ export const StorageOptimizationPanel = () => {
           </Text>
         </>
       )}
-    </View>
+    </AppCard>
   );
 };
 
 const styles = StyleSheet.create({
   container: {
-    padding: 16,
-    borderRadius: 12,
+    marginHorizontal: 16,
     marginVertical: 8,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginLeft: 8,
   },
   loader: {
     marginVertical: 20,
@@ -231,21 +212,8 @@ const styles = StyleSheet.create({
     marginVertical: 20,
     fontStyle: 'italic',
   },
-  optimizeButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 12,
-    borderRadius: 8,
-    marginVertical: 8,
-  },
-  buttonText: {
-    color: '#ffffff',
-    fontWeight: '600',
-    fontSize: 16,
-  },
-  buttonIcon: {
-    marginRight: 8,
+  footer: {
+    marginTop: 16,
   },
   infoText: {
     fontSize: 12,

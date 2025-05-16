@@ -9,9 +9,14 @@ import {
   Alert,
   ActivityIndicator
 } from 'react-native';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+// MaterialCommunityIcons est utilisé dans le code existant qui n'a pas été modifié
 import { Picker } from '@react-native-picker/picker';
 import NetInfo from '@react-native-community/netinfo';
+// Les imports de Colors et Theme ont été supprimés car ils n'étaient pas utilisés
+import { AppButton } from '../../components/ui/AppButton';
+import { StandardHeader } from '../../components/ui/AppHeader';
+import { AppCard } from '../../components/ui/AppCard';
+import { StorageOptimizationPanel } from '../../components/StorageOptimizationPanel';
 
 // Importer les fonctions de gestion du cache
 import {
@@ -23,6 +28,7 @@ import {
 } from '../../services/translationService';
 
 export default function SettingsScreen() {
+  // La variable colorScheme a été supprimée car elle n'était pas utilisée
   // États pour les statistiques du cache
   const [cacheStats, setCacheStats] = useState<{
     totalEntries: number;
@@ -160,30 +166,11 @@ export default function SettingsScreen() {
   
   return (
     <SafeAreaView style={styles.container}>
-      {/* En-tête */}
-      <View style={styles.header}>
-        <View style={styles.titleContainer}>
-          <MaterialCommunityIcons
-            name="cog"
-            size={28}
-            color="#4361ee"
-            style={styles.titleIcon}
-          />
-          <Text style={styles.headerTitle}>Paramètres</Text>
-        </View>
-        <View style={styles.connectionStatus}>
-          <MaterialCommunityIcons
-            name={isConnected ? 'wifi' : 'wifi-off'}
-            size={18}
-            color={isConnected ? '#4CAF50' : '#F44336'}
-          />
-          <Text style={styles.connectionText}>
-            {isConnected ? 'En ligne' : 'Hors ligne'}
-          </Text>
-        </View>
-      </View>
-      
-      <ScrollView style={styles.scrollView}>
+      <StandardHeader 
+        title="Paramètres"
+        showLogo={false}
+      />
+      <ScrollView style={styles.scrollView} contentContainerStyle={{ paddingBottom: 20 }}>
         {isLoading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#4361ee" />
@@ -192,43 +179,39 @@ export default function SettingsScreen() {
         ) : (
           <>
             {/* Section de gestion du cache */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Gestion du cache de traduction</Text>
-              
-              <View style={styles.card}>
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Traductions en cache:</Text>
-                  <Text style={styles.statValue}>{cacheStats?.totalEntries || 0}</Text>
-                </View>
-                
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Phrases d&lsquo;urgence:</Text>
-                  <Text style={styles.statValue}>{cacheStats?.emergencyPhraseCount || 0}</Text>
-                </View>
-                
-                <View style={styles.statRow}>
-                  <Text style={styles.statLabel}>Dernier nettoyage:</Text>
-                  <Text style={styles.statValue}>
-                    {cacheStats?.lastCleanup ? formatDate(cacheStats.lastCleanup) : 'Jamais'}
-                  </Text>
-                </View>
-                
-                <TouchableOpacity
-                  style={[styles.button, styles.dangerButton, isClearing && styles.disabledButton]}
-                  onPress={handleClearCache}
-                  disabled={isClearing || cacheStats?.totalEntries === 0}
-                >
-                  {isClearing ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="delete" size={18} color="#fff" />
-                      <Text style={styles.buttonText}>Effacer le cache</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+            <AppCard
+              title="Gestion du cache"
+              icon="database"
+              style={styles.section}
+            >
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Traductions en cache:</Text>
+                <Text style={styles.statValue}>{cacheStats?.totalEntries || 0}</Text>
               </View>
-            </View>
+              
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Phrases d’urgence:</Text>
+                <Text style={styles.statValue}>{cacheStats?.emergencyPhraseCount || 0}</Text>
+              </View>
+              
+              <View style={styles.statRow}>
+                <Text style={styles.statLabel}>Dernier nettoyage:</Text>
+                <Text style={styles.statValue}>
+                  {cacheStats?.lastCleanup ? formatDate(cacheStats.lastCleanup) : 'Jamais'}
+                </Text>
+              </View>
+              {/* Bouton pour effacer le cache */}
+              <AppButton 
+                title="Effacer le cache de traduction"
+                icon="delete-sweep"
+                onPress={handleClearCache}
+                disabled={isClearing}
+                loading={isClearing}
+                type="secondary"
+                size="medium"
+                fullWidth
+              />
+            </AppCard>
             
             {/* Section des langues par nombre de traductions */}
             {cacheStats?.languageStats && Object.keys(cacheStats.languageStats).length > 0 && (
@@ -247,44 +230,49 @@ export default function SettingsScreen() {
             )}
             
             {/* Section de téléchargement de langues */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Télécharger des langues pour le mode hors ligne</Text>
+            <AppCard
+              title="Téléchargement de langues"
+              icon="download"
+              style={styles.section}
+            >
+              <Text style={styles.cardDescription}>
+                Téléchargez des langues pour pouvoir les utiliser même sans connexion internet.
+                Les phrases d’urgence et les traductions fréquentes seront disponibles hors ligne.
+              </Text>
               
-              <View style={styles.card}>
-                <Text style={styles.cardDescription}>
-                  Téléchargez des langues pour pouvoir les utiliser même sans connexion internet.
-                  Les phrases d&lsquo;urgence et les traductions fréquentes seront disponibles hors ligne.
-                </Text>
-                
-                <View style={styles.pickerContainer}>
-                  <Picker
-                    selectedValue={selectedLanguage}
-                    style={styles.picker}
-                    onValueChange={(value) => setSelectedLanguage(value)}
-                    dropdownIconColor="#4361ee"
-                  >
-                    {LANGUAGES.filter(lang => lang.code !== 'fr').map((lang) => (
-                      <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
-                    ))}
-                  </Picker>
-                </View>
-                
-                <TouchableOpacity
-                  style={[styles.button, isDownloading && styles.disabledButton]}
-                  onPress={handleDownloadLanguage}
-                  disabled={isDownloading || !isConnected}
+              <View style={styles.pickerContainer}>
+                <Picker
+                  selectedValue={selectedLanguage}
+                  style={styles.picker}
+                  onValueChange={(value) => setSelectedLanguage(value)}
+                  dropdownIconColor="#4361ee"
                 >
-                  {isDownloading ? (
-                    <ActivityIndicator size="small" color="#fff" />
-                  ) : (
-                    <>
-                      <MaterialCommunityIcons name="download" size={18} color="#fff" />
-                      <Text style={styles.buttonText}>Télécharger la langue</Text>
-                    </>
-                  )}
-                </TouchableOpacity>
+                  {LANGUAGES.filter(lang => lang.code !== 'fr').map((lang) => (
+                    <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
+                  ))}
+                </Picker>
               </View>
-            </View>
+              {/* Bouton de téléchargement */}
+              <AppButton 
+                title="Télécharger la langue"
+                icon="download"
+                onPress={handleDownloadLanguage}
+                disabled={isDownloading || !isConnected}
+                loading={isDownloading}
+                type="primary"
+                size="medium"
+                fullWidth
+              />
+              
+              {!isConnected && (
+                <Text style={styles.warningText}>
+                  Vous devez être connecté à Internet pour télécharger des langues.
+                </Text>
+              )}
+            </AppCard>
+            
+            {/* Section d'optimisation du stockage */}
+            <StorageOptimizationPanel />
             
             {/* Section de configuration du cache */}
             <View style={styles.section}>
@@ -508,6 +496,12 @@ const styles = StyleSheet.create({
   sliderMaxLabel: {
     fontSize: 12,
     color: '#718096',
+  },
+  warningText: {
+    fontSize: 14,
+    color: '#e53e3e',
+    marginTop: 8,
+    fontStyle: 'italic',
   },
   // Styles pour le slider personnalisé
   customSliderContainer: {
