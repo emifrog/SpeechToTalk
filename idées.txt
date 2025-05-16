@@ -13,7 +13,6 @@ Mon application SPEECH TO TALK  qui vise à une traduction vocale automatique en
 2. Fonctionnalités Hors-ligne Améliorées
    - Téléchargement automatique des packs de langues les plus courantes dans la région
    - Système de cache plus robuste pour fonctionner en zones sans couverture réseau
-   - Compression des données de traduction pour économiser l'espace de stockage
 
 3. Améliorations UX pour Intervention
    - Mode nuit/haute visibilité pour utilisation dans l'obscurité ou en plein soleil

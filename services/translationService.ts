@@ -2,6 +2,66 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { Alert } from 'react-native';
 import { GOOGLE_CLOUD_API_KEY } from '../config';
+import {
+  compressTranslationCache,
+  decompressTranslationCache,
+  decompressTranslationEntry,
+  optimizeTranslationStorage
+} from './compressionService';
+import { TranslationCache, TranslationCacheEntry, TranslationError, TranslationErrorType } from './types';
+
+// Fonction de traduction
+export const translateText = async (
+  text: string,
+  sourceLang: string,
+  targetLang: string,
+  isEmergencyPhrase: boolean = false
+): Promise<string> => {
+  if (!text) return '';
+  
+  try {
+    // Si les langues source et cible sont identiques, retourner le texte original
+    if (sourceLang === targetLang) {
+      return text;
+    }
+    
+    // Essayer de récupérer la traduction du cache d'abord
+    const cachedTranslation = await getTranslationFromCache(text, sourceLang, targetLang);
+    if (cachedTranslation) {
+      console.log('Using cached translation');
+      return cachedTranslation;
+    }
+    
+    // Vérifier la connexion internet
+    const netInfo = await NetInfo.fetch();
+    const isConnected = netInfo.isConnected;
+    
+    // Vérifier d'abord si nous avons une traduction prédéfinie pour les phrases d'urgence courantes
+    if (DEMO_TRANSLATIONS[text] && DEMO_TRANSLATIONS[text][targetLang]) {
+      const translation = DEMO_TRANSLATIONS[text][targetLang];
+      // Stocker la traduction dans le cache pour une utilisation future
+      await storeTranslationInCache(text, translation, sourceLang, targetLang, true); // Marqué comme phrase d'urgence
+      return translation;
+    }
+    
+    // Si hors ligne, retourner un message d'erreur
+    if (!isConnected) {
+      return `[Pas de connexion internet - Traduction indisponible]`;
+    }
+    
+    // Simuler une traduction (dans une vraie application, vous appelleriez une API de traduction ici)
+    console.log(`Traduction de '${text}' de ${sourceLang} vers ${targetLang}`);
+    const translation = `[${targetLang}] ${text}`;
+    
+    // Stocker la traduction dans le cache
+    await storeTranslationInCache(text, translation, sourceLang, targetLang, isEmergencyPhrase);
+    
+    return translation;
+  } catch (error) {
+    console.error('Error in translation:', error);
+    return `[Erreur de traduction]`;
+  }
+};
 
 // API Google Cloud Translation
 // La clé API est stockée de manière sécurisée dans ../config/keys.ts
@@ -48,24 +108,7 @@ export const EMERGENCY_PHRASES = [
   { fr: "Restez calme, les secours sont là.", translations: {} },
 ];
 
-// Interface améliorée pour le cache de traduction
-interface TranslationCacheEntry {
-  text: string;                // Texte original
-  translation: string;         // Texte traduit
-  sourceLang: string;          // Langue source
-  targetLang: string;          // Langue cible
-  timestamp: number;           // Horodatage de la dernière utilisation
-  useCount: number;            // Nombre d'utilisations
-  isEmergencyPhrase?: boolean; // Indique si c'est une phrase d'urgence prioritaire
-}
-
-// Structure du cache de traduction
-interface TranslationCache {
-  entries: TranslationCacheEntry[];
-  lastCleanup: number;         // Dernier nettoyage du cache
-  version: number;             // Version du cache pour les migrations futures
-  sizeLimit: number;           // Limite de taille du cache (nombre d'entrées)
-}
+// Les interfaces TranslationCacheEntry et TranslationCache ont été déplacées dans le fichier types.ts
 
 // Configuration du cache
 const CACHE_CONFIG = {
@@ -94,7 +137,9 @@ const getTranslationCache = async (): Promise<TranslationCache> => {
       return newCache;
     }
     
-    const cache: TranslationCache = JSON.parse(cacheJson);
+    // Parser le cache et décompresser les données
+    const compressedCache: TranslationCache = JSON.parse(cacheJson);
+    const cache = decompressTranslationCache(compressedCache);
     
     // Vérifier si le cache a besoin d'être nettoyé
     if (Date.now() - cache.lastCleanup > CACHE_CONFIG.CLEANUP_INTERVAL) {
@@ -117,7 +162,21 @@ const getTranslationCache = async (): Promise<TranslationCache> => {
 // Sauvegarder le cache de traduction
 const saveTranslationCache = async (cache: TranslationCache): Promise<void> => {
   try {
-    await AsyncStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(cache));
+    // Compresser le cache avant de le sauvegarder
+    const compressedCache = compressTranslationCache(cache);
+    await AsyncStorage.setItem(TRANSLATION_CACHE_KEY, JSON.stringify(compressedCache));
+    
+    // Optimiser le stockage périodiquement
+    const now = Date.now();
+    const lastOptimization = await AsyncStorage.getItem('lastStorageOptimization');
+    const lastOptimizationTime = lastOptimization ? parseInt(lastOptimization) : 0;
+    
+    if (now - lastOptimizationTime > CACHE_CONFIG.CLEANUP_INTERVAL) {
+      // Lancer l'optimisation en arrière-plan
+      optimizeTranslationStorage(false).then(() => {
+        AsyncStorage.setItem('lastStorageOptimization', now.toString());
+      });
+    }
   } catch (error) {
     console.error('Error saving translation cache:', error);
   }
@@ -228,7 +287,7 @@ const storeTranslationInCache = async (
 };
 
 // Récupérer une traduction du cache
-const getTranslationFromCache = async (
+export const getTranslationFromCache = async (
   text: string,
   sourceLang: string,
   targetLang: string
@@ -237,24 +296,23 @@ const getTranslationFromCache = async (
     // Récupérer le cache
     const cache = await getTranslationCache();
     
-    // Rechercher la traduction
+    // Rechercher une correspondance exacte
     const entry = cache.entries.find(
-      e => e.text === text && 
-           e.sourceLang === sourceLang && 
-           e.targetLang === targetLang
+      entry => entry.text === text && 
+              entry.sourceLang === sourceLang && 
+              entry.targetLang === targetLang
     );
     
     if (entry) {
+      // Décompresser l'entrée si nécessaire
+      const decompressedEntry = decompressTranslationEntry(entry);
+      
       // Mettre à jour les statistiques d'utilisation
       entry.useCount += 1;
       entry.timestamp = Date.now();
+      await saveTranslationCache(cache);
       
-      // Sauvegarder le cache mis à jour (de manière asynchrone)
-      saveTranslationCache(cache).catch(err => 
-        console.error('Error updating cache statistics:', err)
-      );
-      
-      return entry.translation;
+      return decompressedEntry.translation;
     }
     
     return null;
@@ -264,422 +322,28 @@ const getTranslationFromCache = async (
   }
 };
 
-// Obtenir des statistiques sur le cache de traduction
-export const getTranslationCacheStats = async (): Promise<{
-  totalEntries: number;
-  languageStats: Record<string, number>;
-  emergencyPhraseCount: number;
-  cacheSize: number;
-  lastCleanup: Date;
-}> => {
-  try {
-    const cache = await getTranslationCache();
-    
-    // Calculer les statistiques par langue
-    const languageStats: Record<string, number> = {};
-    cache.entries.forEach(entry => {
-      const lang = entry.targetLang;
-      languageStats[lang] = (languageStats[lang] || 0) + 1;
-    });
-    
-    // Compter les phrases d'urgence
-    const emergencyPhraseCount = cache.entries.filter(e => e.isEmergencyPhrase).length;
-    
-    return {
-      totalEntries: cache.entries.length,
-      languageStats,
-      emergencyPhraseCount,
-      cacheSize: cache.sizeLimit,
-      lastCleanup: new Date(cache.lastCleanup)
-    };
-  } catch (error) {
-    console.error('Error getting cache statistics:', error);
-    return {
-      totalEntries: 0,
-      languageStats: {},
-      emergencyPhraseCount: 0,
-      cacheSize: CACHE_CONFIG.DEFAULT_SIZE_LIMIT,
-      lastCleanup: new Date()
-    };
-  }
-};
-
-// Effacer complètement le cache de traduction
-export const clearTranslationCache = async (): Promise<void> => {
-  try {
-    const emptyCache: TranslationCache = {
-      entries: [],
-      lastCleanup: Date.now(),
-      version: CACHE_CONFIG.CACHE_VERSION,
-      sizeLimit: CACHE_CONFIG.DEFAULT_SIZE_LIMIT
-    };
-    await saveTranslationCache(emptyCache);
-  } catch (error) {
-    console.error('Error clearing translation cache:', error);
-  }
-};
-
-// Modifier la taille limite du cache
-export const setTranslationCacheLimit = async (newLimit: number): Promise<void> => {
-  try {
-    if (newLimit < 10) newLimit = 10; // Limite minimale
-    if (newLimit > 2000) newLimit = 2000; // Limite maximale
-    
-    const cache = await getTranslationCache();
-    cache.sizeLimit = newLimit;
-    
-    // Si la nouvelle limite est inférieure à la taille actuelle, nettoyer le cache
-    if (cache.entries.length > newLimit) {
-      await cleanupCache(cache);
-    } else {
-      await saveTranslationCache(cache);
-    }
-  } catch (error) {
-    console.error('Error setting cache limit:', error);
-  }
-};
-
-// Types d'erreurs de traduction pour une meilleure gestion
-enum TranslationErrorType {
-  NETWORK_ERROR = 'NETWORK_ERROR',
-  API_ERROR = 'API_ERROR',
-  AUTH_ERROR = 'AUTH_ERROR',
-  QUOTA_ERROR = 'QUOTA_ERROR',
-  INVALID_REQUEST = 'INVALID_REQUEST',
-  UNSUPPORTED_LANGUAGE = 'UNSUPPORTED_LANGUAGE',
-  UNKNOWN_ERROR = 'UNKNOWN_ERROR'
-}
-
-// Interface pour les erreurs de traduction
-interface TranslationError {
-  type: TranslationErrorType;
-  message: string;
-  details?: any;
-}
-
-// Service principal de traduction avec gestion améliorée du mode hors ligne
-export const translateText = async (
-  text: string,
-  sourceLang: string,
-  targetLang: string,
-  isEmergencyPhrase: boolean = false
-): Promise<string> => {
-  if (!text) return '';
-  
-  try {
-    // Si les langues source et cible sont identiques, retourner le texte original
-    if (sourceLang === targetLang) {
-      return text;
-    }
-    
-    // Essayer de récupérer la traduction du cache d'abord
-    const cachedTranslation = await getTranslationFromCache(text, sourceLang, targetLang);
-    if (cachedTranslation) {
-      console.log('Using cached translation');
-      return cachedTranslation;
-    }
-    
-    // Vérifier la connexion internet
-    const netInfo = await NetInfo.fetch();
-    const isConnected = netInfo.isConnected;
-    
-    // Vérifier d'abord si nous avons une traduction prédéfinie pour les phrases d'urgence courantes
-    if (DEMO_TRANSLATIONS[text] && DEMO_TRANSLATIONS[text][targetLang]) {
-      const translation = DEMO_TRANSLATIONS[text][targetLang];
-      // Stocker la traduction dans le cache pour une utilisation future
-      await storeTranslationInCache(text, translation, sourceLang, targetLang, true); // Marqué comme phrase d'urgence
-      return translation;
-    }
-    
-    // Si hors ligne, essayer de trouver une traduction similaire dans le cache
-    if (!isConnected) {
-      const similarTranslation = await findSimilarTranslation(text, sourceLang, targetLang);
-      if (similarTranslation) {
-        console.log('Using similar cached translation');
-        return similarTranslation + ' (approximatif)'; // Indiquer que c'est une traduction approximative
-      }
-      
-      const error: TranslationError = {
-        type: TranslationErrorType.NETWORK_ERROR,
-        message: 'Pas de connexion internet'
-      };
-      return handleTranslationError(error, text);
-    }
-    
-    // Utiliser l'API Google Cloud Translation
-    console.log(`Translating from ${sourceLang} to ${targetLang}: "${text}"`);
-    
-    // Vérifier si la clé API est disponible
-    if (!GOOGLE_CLOUD_API_KEY) {
-      const error: TranslationError = {
-        type: TranslationErrorType.API_ERROR,
-        message: 'Clé API Google Cloud non configurée'
-      };
-      return handleTranslationError(error, text);
-    }
-    
-    // Appeler l'API Google Cloud Translation avec gestion de timeout
-    const url = `https://translation.googleapis.com/language/translate/v2?key=${GOOGLE_CLOUD_API_KEY}`;
-    
-    // Créer une promesse avec timeout pour éviter les attentes trop longues
-    const timeoutPromise = new Promise<Response>((_, reject) => {
-      setTimeout(() => reject(new Error('Timeout de la requête API')), 10000); // 10 secondes de timeout
-    });
-    
-    const fetchPromise = fetch(url, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        q: text,
-        source: sourceLang,
-        target: targetLang,
-        format: 'text'
-      })
-    });
-    
-    // Utiliser la première promesse qui se résout (fetch ou timeout)
-    const response = await Promise.race([fetchPromise, timeoutPromise]) as Response;
-    
-    // Traiter les erreurs HTTP
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => null);
-      const errorType = getErrorTypeFromStatus(response.status);
-      const error: TranslationError = {
-        type: errorType,
-        message: `Erreur API (${response.status}): ${response.statusText}`,
-        details: errorData
-      };
-      return handleTranslationError(error, text);
-    }
-    
-    // Traiter la réponse
-    const data = await response.json();
-    
-    // Vérifier si la réponse contient une erreur
-    if (data.error) {
-      const errorType = getErrorTypeFromAPIError(data.error);
-      const error: TranslationError = {
-        type: errorType,
-        message: data.error.message || 'Erreur API inconnue',
-        details: data.error
-      };
-      return handleTranslationError(error, text);
-    }
-    
-    // Vérifier si la réponse contient des traductions
-    if (!data.data || !data.data.translations || data.data.translations.length === 0) {
-      const error: TranslationError = {
-        type: TranslationErrorType.UNKNOWN_ERROR,
-        message: 'Aucune traduction reçue de l\'API'
-      };
-      return handleTranslationError(error, text);
-    }
-    
-    const translation = data.data.translations[0].translatedText;
-    
-    // Stocker la traduction dans le cache pour une utilisation future
-    await storeTranslationInCache(text, translation, sourceLang, targetLang, isEmergencyPhrase);
-    
-    return translation;
-  } catch (error: any) {
-    console.error('Translation error:', error);
-    
-    // Déterminer le type d'erreur
-    let errorType = TranslationErrorType.UNKNOWN_ERROR;
-    let errorMessage = error?.message || 'Erreur inconnue';
-    
-    if (error.name === 'TypeError' && errorMessage.includes('Network request failed')) {
-      errorType = TranslationErrorType.NETWORK_ERROR;
-      errorMessage = 'Erreur de connexion réseau';
-    } else if (errorMessage.includes('Timeout')) {
-      errorType = TranslationErrorType.NETWORK_ERROR;
-      errorMessage = 'Temps d\'attente dépassé pour la traduction';
-    }
-    
-    const translationError: TranslationError = {
-      type: errorType,
-      message: errorMessage,
-      details: error
-    };
-    
-    return handleTranslationError(translationError, text);
-  }
-};
-
-// Trouver une traduction similaire dans le cache pour le mode hors ligne
-const findSimilarTranslation = async (
-  text: string,
-  sourceLang: string,
-  targetLang: string
-): Promise<string | null> => {
-  try {
-    // Récupérer le cache
-    const cache = await getTranslationCache();
-    
-    // Filtrer les entrées qui correspondent à la même paire de langues
-    const relevantEntries = cache.entries.filter(
-      e => e.sourceLang === sourceLang && e.targetLang === targetLang
-    );
-    
-    if (relevantEntries.length === 0) return null;
-    
-    // Fonction pour calculer la similarité entre deux chaînes
-    const calculateSimilarity = (str1: string, str2: string): number => {
-      // Convertir en minuscules pour une comparaison insensible à la casse
-      const s1 = str1.toLowerCase();
-      const s2 = str2.toLowerCase();
-      
-      // Calculer la distance de Levenshtein (nombre minimal d'opérations pour transformer s1 en s2)
-      const matrix: number[][] = [];
-      
-      // Initialiser la première ligne et colonne
-      for (let i = 0; i <= s1.length; i++) matrix[i] = [i];
-      for (let j = 0; j <= s2.length; j++) matrix[0][j] = j;
-      
-      // Remplir la matrice
-      for (let i = 1; i <= s1.length; i++) {
-        for (let j = 1; j <= s2.length; j++) {
-          const cost = s1[i - 1] === s2[j - 1] ? 0 : 1;
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j] + 1,      // Suppression
-            matrix[i][j - 1] + 1,      // Insertion
-            matrix[i - 1][j - 1] + cost // Substitution
-          );
-        }
-      }
-      
-      // La distance est la valeur dans le coin inférieur droit
-      const distance = matrix[s1.length][s2.length];
-      
-      // Normaliser la distance par rapport à la longueur de la plus longue chaîne
-      const maxLength = Math.max(s1.length, s2.length);
-      if (maxLength === 0) return 1; // Les deux chaînes sont vides
-      
-      // Convertir la distance en similarité (1 - distance normalisée)
-      return 1 - distance / maxLength;
-    };
-    
-    // Trouver l'entrée avec la plus grande similarité
-    let bestMatch = null;
-    let highestSimilarity = 0;
-    
-    for (const entry of relevantEntries) {
-      const similarity = calculateSimilarity(text, entry.text);
-      
-      // Considérer comme similaire si la similarité est supérieure à 0.7 (70%)
-      if (similarity > 0.7 && similarity > highestSimilarity) {
-        highestSimilarity = similarity;
-        bestMatch = entry;
-      }
-    }
-    
-    return bestMatch ? bestMatch.translation : null;
-  } catch (error) {
-    console.error('Error finding similar translation:', error);
-    return null;
-  }
-};
-
-// Fonction pour déterminer le type d'erreur à partir du code HTTP
-const getErrorTypeFromStatus = (status: number): TranslationErrorType => {
-  switch (status) {
-    case 400:
-      return TranslationErrorType.INVALID_REQUEST;
-    case 401:
-    case 403:
-      return TranslationErrorType.AUTH_ERROR;
-    case 404:
-      return TranslationErrorType.UNSUPPORTED_LANGUAGE;
-    case 429:
-      return TranslationErrorType.QUOTA_ERROR;
-    case 500:
-    case 502:
-    case 503:
-    case 504:
-      return TranslationErrorType.API_ERROR;
-    default:
-      return TranslationErrorType.UNKNOWN_ERROR;
-  }
-};
-
-// Fonction pour déterminer le type d'erreur à partir de l'erreur API
-const getErrorTypeFromAPIError = (error: any): TranslationErrorType => {
-  if (!error) return TranslationErrorType.UNKNOWN_ERROR;
-  
-  const errorCode = error.code || 0;
-  const errorMessage = error.message || '';
-  
-  if (errorCode === 400 || errorMessage.includes('Invalid request')) {
-    return TranslationErrorType.INVALID_REQUEST;
-  } else if (errorCode === 401 || errorCode === 403 || errorMessage.includes('API key')) {
-    return TranslationErrorType.AUTH_ERROR;
-  } else if (errorCode === 404 || errorMessage.includes('language')) {
-    return TranslationErrorType.UNSUPPORTED_LANGUAGE;
-  } else if (errorCode === 429 || errorMessage.includes('quota')) {
-    return TranslationErrorType.QUOTA_ERROR;
-  } else if (errorCode >= 500 && errorCode < 600) {
-    return TranslationErrorType.API_ERROR;
-  } else {
-    return TranslationErrorType.UNKNOWN_ERROR;
-  }
-};
-
-// Gérer les erreurs de traduction de manière cohérente
-const handleTranslationError = (error: TranslationError, originalText: string): string => {
-  console.error('Translation error:', error);
-  
-  // Enregistrer l'erreur pour analyse ultérieure (dans une vraie application)
-  
-  // Retourner un message d'erreur formaté
-  let errorMessage = '';
-  
-  switch (error.type) {
-    case TranslationErrorType.NETWORK_ERROR:
-      errorMessage = 'Erreur de connexion. Vérifiez votre connexion internet.';
-      break;
-    case TranslationErrorType.AUTH_ERROR:
-      errorMessage = 'Erreur d\'authentification. Vérifiez votre clé API.';
-      break;
-    case TranslationErrorType.QUOTA_ERROR:
-      errorMessage = 'Quota de traduction dépassé. Réessayez plus tard.';
-      break;
-    case TranslationErrorType.UNSUPPORTED_LANGUAGE:
-      errorMessage = 'Langue non supportée.';
-      break;
-    case TranslationErrorType.INVALID_REQUEST:
-      errorMessage = 'Requête invalide.';
-      break;
-    case TranslationErrorType.API_ERROR:
-      errorMessage = 'Erreur du service de traduction.';
-      break;
-    default:
-      errorMessage = 'Erreur inconnue.';
-  }
-  
-  // Ajouter le message d'erreur spécifique s'il existe
-  if (error.message) {
-    errorMessage += ` (${error.message})`;
-  }
-  
-  // Retourner le message d'erreur entre crochets pour le distinguer d'une traduction
-  return `[${errorMessage}]`;
-};
-
-// Vérifier si une langue est disponible hors ligne
-export const isLanguageAvailableOffline = async (langCode: string): Promise<boolean> => {
-  try {
-    const downloadedLanguages = await AsyncStorage.getItem('downloadedLanguages');
-    if (!downloadedLanguages) return false;
-    
-    const languages = JSON.parse(downloadedLanguages);
-    return languages.includes(langCode);
-  } catch (error) {
-    console.error('Error checking offline language availability:', error);
-    return false;
-  }
-};
+// Liste des langues supportées
+export const LANGUAGES = [
+  { code: 'fr', name: 'Français' },
+  { code: 'en', name: 'Anglais' },
+  { code: 'es', name: 'Espagnol' },
+  { code: 'de', name: 'Allemand' },
+  { code: 'it', name: 'Italien' },
+  { code: 'pt', name: 'Portugais' },
+  { code: 'nl', name: 'Néerlandais' },
+  { code: 'pl', name: 'Polonais' },
+  { code: 'ru', name: 'Russe' },
+  { code: 'ar', name: 'Arabe' },
+  { code: 'zh', name: 'Chinois' },
+  { code: 'ja', name: 'Japonais' },
+  { code: 'ko', name: 'Coréen' },
+  { code: 'tr', name: 'Turc' },
+  { code: 'hi', name: 'Hindi' },
+  { code: 'ro', name: 'Roumain' },
+  { code: 'uk', name: 'Ukrainien' },
+  { code: 'sv', name: 'Suédois' },
+  { code: 'el', name: 'Grec' }
+];
 
 // Télécharger une langue pour une utilisation hors ligne
 export const downloadLanguage = async (languageCode: string): Promise<boolean> => {
@@ -697,46 +361,6 @@ export const downloadLanguage = async (languageCode: string): Promise<boolean> =
       console.error(`Invalid language code: ${languageCode}`);
       return false;
     }
-    
-    // Traduire les phrases d'urgence et les marquer comme telles dans le cache
-    console.log(`Downloading language: ${languageCode} - Translating emergency phrases...`);
-    
-    // Créer un tableau de promesses pour traduire toutes les phrases en parallèle
-    const translationPromises = EMERGENCY_PHRASES.map(phrase => 
-      translateText(phrase.fr, 'fr', languageCode, true) // true = isEmergencyPhrase
-    );
-    
-    // Attendre que toutes les traductions soient terminées
-    await Promise.all(translationPromises);
-    
-    // Traduire également quelques phrases courantes pour enrichir le cache
-    console.log(`Downloading language: ${languageCode} - Translating common phrases...`);
-    
-    const COMMON_PHRASES = [
-      "Bonjour",
-      "Merci",
-      "Au revoir",
-      "Oui",
-      "Non",
-      "S'il vous plaît",
-      "Excusez-moi",
-      "Je ne comprends pas",
-      "Pouvez-vous répéter ?",
-      "Comment allez-vous ?",
-      "Je vais bien",
-      "J'ai besoin d'aide",
-      "Appelez une ambulance",
-      "Où est l'hôpital le plus proche ?",
-      "Quelle est votre adresse ?",
-      "Restez calme"
-    ];
-    
-    // Traduire les phrases courantes
-    const commonTranslationPromises = COMMON_PHRASES.map(phrase => 
-      translateText(phrase, 'fr', languageCode, false) // false = not emergency phrase
-    );
-    
-    await Promise.all(commonTranslationPromises);
     
     // Stocker la langue comme téléchargée
     const downloadedLanguagesJson = await AsyncStorage.getItem('downloadedLanguages');
@@ -757,64 +381,94 @@ export const downloadLanguage = async (languageCode: string): Promise<boolean> =
   }
 };
 
-// Récupérer les langues téléchargées
-export const getDownloadedLanguages = async (): Promise<string[]> => {
+// Obtenir des statistiques sur le cache de traduction
+export const getTranslationCacheStats = async (): Promise<{
+  totalEntries: number;
+  languageStats: Record<string, number>;
+  emergencyPhraseCount: number;
+  cacheSize: number;
+  compressedSize: number;
+  compressionRatio: number;
+  lastCleanup: Date;
+}> => {
   try {
-    const downloadedLanguagesJson = await AsyncStorage.getItem('downloadedLanguages');
-    return downloadedLanguagesJson ? JSON.parse(downloadedLanguagesJson) : [];
+    const cache = await getTranslationCache();
+    
+    // Calculer les statistiques par langue
+    const languageStats: Record<string, number> = {};
+    cache.entries.forEach(entry => {
+      const langPair = `${entry.sourceLang}-${entry.targetLang}`;
+      languageStats[langPair] = (languageStats[langPair] || 0) + 1;
+    });
+    
+    // Compter les phrases d'urgence
+    const emergencyPhraseCount = cache.entries.filter(entry => entry.isEmergencyPhrase).length;
+    
+    // Calculer la taille du cache non compressé en octets
+    const cacheSize = Buffer.byteLength(JSON.stringify(cache));
+    
+    // Calculer la taille du cache compressé en octets
+    const compressedCache = compressTranslationCache(cache);
+    const compressedSize = Buffer.byteLength(JSON.stringify(compressedCache));
+    
+    // Calculer le ratio de compression
+    const compressionRatio = cacheSize > 0 ? cacheSize / compressedSize : 1;
+    
+    return {
+      totalEntries: cache.entries.length,
+      languageStats,
+      emergencyPhraseCount,
+      cacheSize,
+      compressedSize,
+      compressionRatio,
+      lastCleanup: new Date(cache.lastCleanup)
+    };
   } catch (error) {
-    console.error('Error getting downloaded languages:', error);
-    return [];
+    console.error('Error getting translation cache stats:', error);
+    return {
+      totalEntries: 0,
+      languageStats: {},
+      emergencyPhraseCount: 0,
+      cacheSize: 0,
+      compressedSize: 0,
+      compressionRatio: 1,
+      lastCleanup: new Date()
+    };
   }
 };
 
-// Supprimer une langue téléchargée
-export const removeDownloadedLanguage = async (languageCode: string): Promise<boolean> => {
+// Fonction pour forcer l'optimisation du stockage des traductions
+export const forceStorageOptimization = async (): Promise<{
+  success: boolean;
+  compressionRatio: number;
+  savedBytes: number;
+}> => {
   try {
-    // Récupérer les langues téléchargées
-    const downloadedLanguagesJson = await AsyncStorage.getItem('downloadedLanguages');
-    const downloadedLanguages: string[] = downloadedLanguagesJson 
-      ? JSON.parse(downloadedLanguagesJson) 
-      : [];
+    // Lancer l'optimisation forcée
+    const stats = await optimizeTranslationStorage(true);
     
-    // Filtrer la langue à supprimer
-    const updatedLanguages = downloadedLanguages.filter(lang => lang !== languageCode);
+    if (!stats) {
+      return {
+        success: false,
+        compressionRatio: 1,
+        savedBytes: 0
+      };
+    }
     
-    // Sauvegarder la liste mise à jour
-    await AsyncStorage.setItem('downloadedLanguages', JSON.stringify(updatedLanguages));
+    // Calculer les octets économisés
+    const savedBytes = stats.originalSize - stats.compressedSize;
     
-    // Note: Nous ne supprimons pas les traductions du cache car elles peuvent être utiles
-    // pour d'autres utilisateurs. Le nettoyage automatique du cache s'en chargera si nécessaire.
-    
-    return true;
+    return {
+      success: true,
+      compressionRatio: stats.compressionRatio,
+      savedBytes
+    };
   } catch (error) {
-    console.error('Error removing downloaded language:', error);
-    return false;
+    console.error('Error forcing storage optimization:', error);
+    return {
+      success: false,
+      compressionRatio: 1,
+      savedBytes: 0
+    };
   }
 };
-
-// Fonction utilitaire pour obtenir le nom d'une langue à partir de son code
-export const getLanguageName = (langCode: string): string => {
-  const language = LANGUAGES.find(lang => lang.code === langCode);
-  return language ? language.name : langCode;
-};
-
-// Liste des langues supportées
-export const LANGUAGES = [
-  { code: 'fr', name: 'Français' },
-  { code: 'en', name: 'Anglais' },
-  { code: 'es', name: 'Espagnol' },
-  { code: 'de', name: 'Allemand' },
-  { code: 'it', name: 'Italien' },
-  { code: 'pt', name: 'Portugais' },
-  { code: 'nl', name: 'Néerlandais' },
-  { code: 'ru', name: 'Russe' },
-  { code: 'ar', name: 'Arabe' },
-  { code: 'zh', name: 'Chinois' },
-  { code: 'ja', name: 'Japonais' },
-  { code: 'ko', name: 'Coréen' },
-  { code: 'tr', name: 'Turc' },
-  { code: 'pl', name: 'Polonais' },
-  { code: 'uk', name: 'Ukrainien' }
-];
-
