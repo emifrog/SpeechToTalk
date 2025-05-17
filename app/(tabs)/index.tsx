@@ -1,8 +1,4 @@
 import { Colors } from '@/constants/Colors';
-import { Theme } from '@/constants/Theme';
-import { AppButton } from '../../components/ui/AppButton';
-import { StandardHeader } from '../../components/ui/AppHeader';
-import { AppCard } from '../../components/ui/AppCard';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
@@ -21,6 +17,8 @@ import {
   useColorScheme,
   View
 } from 'react-native';
+import { AppCard } from '../../components/ui/AppCard';
+import { StandardHeader } from '../../components/ui/AppHeader';
 
 // Importer notre service de traduction
 import { downloadLanguage, LANGUAGES, translateText } from '../../services/translationService';
@@ -68,18 +66,7 @@ const createMockVoice = () => {
       }, 2000);
       return Promise.resolve();
     },
-    stop: () => {
-      console.log('Mock Voice would stop');
-      return Promise.resolve();
-    },
-    cancel: () => {
-      console.log('Mock Voice would cancel');
-      return Promise.resolve();
-    },
-    destroy: () => {
-      console.log('Mock Voice would destroy');
-      return Promise.resolve();
-    },
+
     
     // Gestion des événements
     removeAllListeners: () => {},
@@ -170,6 +157,120 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     flex: 1,
     backgroundColor: colorScheme === 'dark' ? '#151718' : '#f8f9fa',
     padding: 16,
+  },
+  // Nouveaux styles pour le design amélioré de la partie discussion
+  chatContainer: {
+    marginBottom: 16,
+    backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff',
+    borderRadius: 16,
+    padding: 16,
+    elevation: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.1,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: colorScheme === 'dark' ? '#333333' : '#f1f2f6',
+  },
+  conversationContainer: {
+    marginBottom: 16,
+    minHeight: 200,
+  },
+  messageBubbleSource: {
+    backgroundColor: colorScheme === 'dark' ? 'rgba(0, 131, 143, 0.15)' : 'rgba(0, 131, 143, 0.08)',
+    borderWidth: 1,
+    borderColor: colorScheme === 'dark' ? 'rgba(0, 131, 143, 0.3)' : 'rgba(0, 131, 143, 0.2)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    maxWidth: '90%',
+    alignSelf: 'flex-start',
+  },
+  messageBubbleTarget: {
+    backgroundColor: colorScheme === 'dark' ? 'rgba(255, 111, 0, 0.15)' : 'rgba(255, 111, 0, 0.08)',
+    borderWidth: 1,
+    borderColor: colorScheme === 'dark' ? 'rgba(255, 111, 0, 0.3)' : 'rgba(255, 111, 0, 0.2)',
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 12,
+    maxWidth: '90%',
+    alignSelf: 'flex-end',
+    position: 'relative',
+    paddingRight: 40, // Espace pour le bouton de lecture
+  },
+  bubbleHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  bubbleHeaderText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colorScheme === 'dark' ? '#e2e8f0' : '#4a5568',
+    marginLeft: 6,
+  },
+  messageText: {
+    fontSize: 16,
+    color: colorScheme === 'dark' ? '#e2e8f0' : '#2d3748',
+    lineHeight: 22,
+  },
+  speakButton: {
+    position: 'absolute',
+    right: 8,
+    bottom: 8,
+    backgroundColor: colors.secondary,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  emptyConversationContainer: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 30,
+    height: 200,
+  },
+  emptyConversationText: {
+    fontSize: 16,
+    color: colorScheme === 'dark' ? '#a0aec0' : '#a0aec0',
+    marginTop: 16,
+    textAlign: 'center',
+  },
+  toolbarContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 8,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: colorScheme === 'dark' ? '#333333' : '#f1f2f6',
+  },
+  micButton: {
+    backgroundColor: colors.primary,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 4,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+  },
+  micButtonActive: {
+    backgroundColor: colors.secondary,
+  },
+  clearButton: {
+    position: 'absolute',
+    right: 16,
+    backgroundColor: colorScheme === 'dark' ? '#333333' : '#f1f2f6',
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   scrollContainer: {
     flex: 1,
@@ -598,7 +699,6 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
 function HomeScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-  const theme = Theme;
   const styles = createStyles(colorScheme, colors);
   const [isListening, setIsListening] = useState(false);
   const [spokenText, setSpokenText] = useState('');
@@ -762,7 +862,6 @@ function HomeScreen() {
         Voice.onSpeechResults = onSpeechResults;
         Voice.onSpeechError = onSpeechError;
 
-        console.log('Voice recognition initialized successfully');
       } catch (error) {
         console.error('Voice recognition setup error:', error);
         Alert.alert(
@@ -887,14 +986,11 @@ function HomeScreen() {
   // Demande de permission pour le microphone en utilisant expo-av
   const requestMicrophonePermission = async () => {
     try {
-      console.log('Requesting microphone permission with Expo...');
       const { status } = await Audio.requestPermissionsAsync();
       
       if (status === 'granted') {
-        console.log('Microphone permission granted');
         return true;
       } else {
-        console.log('Microphone permission denied');
         Alert.alert(
           'Permission requise',
           'L\'application a besoin d\'accéder au microphone pour la reconnaissance vocale.',
@@ -1068,9 +1164,7 @@ function HomeScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <StandardHeader 
-        showLogo={true}
-        rightIcon={isConnected ? 'wifi' : 'wifi-off'}
-        rightIconColor={isConnected ? theme.colors.primary : theme.colors.error}
+        title="Traduction"
       />
       <ScrollView style={styles.scrollContainer} contentContainerStyle={{paddingBottom: 20}}>
       {/* Sélecteurs de langue */}
@@ -1171,7 +1265,87 @@ function HomeScreen() {
         })}
       </ScrollView>
       
-      {/* Historique de conversation */}
+      {/* Texte reconnu et traduit - Design amélioré */}
+      <View style={styles.chatContainer}>
+        {/* Zone de discussion */}
+        <View style={styles.conversationContainer}>
+          {spokenText ? (
+            <View style={styles.messageBubbleSource}>
+              <View style={styles.bubbleHeader}>
+                <MaterialCommunityIcons name="account" size={16} color={colors.primary} />
+                <Text style={styles.bubbleHeaderText}>Vous ({LANGUAGES.find(l => l.code === sourceLanguage)?.name})</Text>
+              </View>
+              <Text style={styles.messageText}>{spokenText}</Text>
+            </View>
+          ) : (
+            <View style={styles.emptyConversationContainer}>
+              <MaterialCommunityIcons name="message-text-outline" size={40} color={colorScheme === 'dark' ? '#4a5568' : '#d1d5db'} />
+              <Text style={styles.emptyConversationText}>Appuyez sur le bouton microphone pour commencer</Text>
+            </View>
+          )}
+          
+          {isTranslating ? (
+            <View style={styles.messageBubbleTarget}>
+              <View style={styles.bubbleHeader}>
+                <MaterialCommunityIcons name="translate" size={16} color={colors.secondary} />
+                <Text style={styles.bubbleHeaderText}>Traduction ({LANGUAGES.find(l => l.code === targetLanguage)?.name})</Text>
+              </View>
+              <View style={styles.loadingContainer}>
+                <ActivityIndicator size="small" color={colors.secondary} />
+                <Text style={styles.loadingText}>Traduction en cours...</Text>
+              </View>
+            </View>
+          ) : translatedText ? (
+            <View style={styles.messageBubbleTarget}>
+              <View style={styles.bubbleHeader}>
+                <MaterialCommunityIcons name="translate" size={16} color={colors.secondary} />
+                <Text style={styles.bubbleHeaderText}>Traduction ({LANGUAGES.find(l => l.code === targetLanguage)?.name})</Text>
+              </View>
+              <Text style={styles.messageText}>{translatedText}</Text>
+              <TouchableOpacity 
+                style={styles.speakButton}
+                onPress={() => speakText(translatedText)}
+              >
+                <MaterialCommunityIcons name="volume-high" size={20} color="#fff" />
+              </TouchableOpacity>
+            </View>
+          ) : null}
+        </View>
+
+                {/* Barre d'outils */}
+                <View style={styles.toolbarContainer}>
+          <TouchableOpacity 
+            style={[styles.micButton, isListening && styles.micButtonActive]}
+            onPress={toggleListening}
+          >
+            <MaterialCommunityIcons 
+              name={isListening ? 'microphone-off' : 'microphone'} 
+              size={28} 
+              color="#fff" 
+            />
+          </TouchableOpacity>
+          
+          {(spokenText || translatedText) && (
+            <TouchableOpacity 
+              style={styles.clearButton}
+              onPress={() => {
+                setSpokenText('');
+                setTranslatedText('');
+              }}
+            >
+              <MaterialCommunityIcons name="eraser" size={24} color={colors.text} />
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+      {isListening && (
+        <View style={styles.recordingStatusContainer}>
+          <View style={styles.recordingIndicator} />
+          <Text style={styles.recordingText}>Écoute en cours...</Text>
+        </View>
+      )}
+
+        {/* Historique de conversation */}
       <View style={styles.sectionHeader}>
         <MaterialCommunityIcons name="history" size={20} color={colors.primary} />
         <Text style={styles.sectionTitle}>Historique de conversation</Text>
@@ -1211,83 +1385,8 @@ function HomeScreen() {
           )}
         </ScrollView>
       </View>
-      
-      {/* Texte reconnu et traduit */}
-      <AppCard
-        title="Texte reconnu"
-        icon="microphone"
-        style={styles.cardContainer}
-      >
-        <View style={styles.recognizedTextContainer}>
-          <View style={styles.textLabelContainer}>
-            <MaterialCommunityIcons name="microphone" size={18} color={colors.primary} style={styles.textLabelIcon} />
-            <Text style={styles.textLabel}>Texte reconnu</Text>
-          </View>
-          <View style={styles.textContentCard}>
-            <Text style={styles.recognizedText}>{spokenText || "Appuyez sur le bouton pour parler..."}</Text>
-          </View>
-        </View>
-      </AppCard>
+        
 
-      <AppCard
-        title="Traduction"
-        icon="translate"
-        style={styles.cardContainer}
-      >
-        <View style={styles.translatedTextContainer}>
-          <View style={styles.textLabelContainer}>
-            <MaterialCommunityIcons name="translate" size={18} color={colors.primary} style={styles.textLabelIcon} />
-            <Text style={styles.textLabel}>Traduction</Text>
-          </View>
-          <View style={styles.textContentCard}>
-            {isTranslating ? (
-              <View style={styles.loadingContainer}>
-                <ActivityIndicator size="small" color={colors.primary} />
-                <Text style={styles.loadingText}>Traduction en cours...</Text>
-              </View>
-            ) : (
-              <Text style={styles.translatedText}>{translatedText || "La traduction apparaîtra ici..."}</Text>
-            )}
-          </View>
-        </View>
-      </AppCard>
-      
-      {/* Boutons d'action */}
-      <View style={styles.actionButtonsContainer}>
-        <AppButton
-          title={isListening ? 'Arrêter' : 'Écouter'}
-          icon={isListening ? 'microphone-off' : 'microphone'}
-          onPress={toggleListening}
-          type={isListening ? 'secondary' : 'primary'}
-          style={styles.actionButtonSpacing}
-        />
-
-        <AppButton
-          title="Lire"
-          icon="volume-high"
-          onPress={() => speakText(translatedText)}
-          disabled={!translatedText}
-          type="primary"
-          style={styles.actionButtonSpacing}
-        />
-
-        <AppButton
-          title="Effacer"
-          icon="eraser"
-          onPress={() => {
-            setSpokenText('');
-            setTranslatedText('');
-          }}
-          type="outline"
-          style={styles.actionButtonSpacing}
-        />
-      </View>
-      {isListening && (
-        <View style={styles.recordingStatusContainer}>
-          <View style={styles.recordingIndicator} />
-          <Text style={styles.recordingText}>Écoute en cours...</Text>
-        </View>
-      )}
       </ScrollView>
     </SafeAreaView>
   );

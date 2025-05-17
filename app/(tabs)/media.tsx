@@ -1,10 +1,10 @@
+import MediaTranslator from '@/components/MediaTranslator';
+import { AppCard } from '@/components/ui/AppCard';
+import { StandardHeader } from '@/components/ui/AppHeader';
+import { Theme } from '@/constants/Theme';
 import React from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import MediaTranslator from '@/components/MediaTranslator';
-import { Theme } from '@/constants/Theme';
-import { StandardHeader } from '@/components/ui/AppHeader';
-import { AppCard } from '@/components/ui/AppCard';
 
 export default function MediaTranslationScreen() {
   return (

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Image, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, useColorScheme } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors } from '@/constants/Colors';
@@ -15,9 +15,9 @@ interface AppHeaderProps {
 }
 
 export function StandardHeader({
-  title,
+  title = 'SpeechToTalk',
   showBackButton = false,
-  showLogo = true,
+  showLogo = false,
   rightIcon,
   onRightIconPress,
   rightIconColor
@@ -48,14 +48,7 @@ export function StandardHeader({
       )}
 
       <View style={styles.centerContainer}>
-        {showLogo && (
-          <Image
-            source={require('@/assets/images/talk-logo2.png')}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-        )}
-        {title && <Text style={[styles.title, { color: colors.text }]}>{title}</Text>}
+        <Text style={[styles.title, { color: colors.primary, fontSize: 22, fontWeight: 'bold' }]}>{title}</Text>
       </View>
 
       {rightIcon ? (
