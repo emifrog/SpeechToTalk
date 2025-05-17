@@ -38,3 +38,25 @@ Mon application SPEECH TO TALK  qui vise à une traduction vocale automatique en
    - Réduire la latence de traduction pour une communication plus fluide
    - Optimiser la consommation de batterie pour les longues interventions
    - Améliorer la précision de reconnaissance vocale dans des environnements bruyants
+
+
+--- SUGGESTIONS D'OPTIMISATION SUITE ---
+
+1. Pictogrammes et communication non verbale
+- Ajout de pictogrammes universels (douleur, brûlure, malaise, etc.) que le pompier peut montrer à la victime pour pointer une zone du corps ou un symptôme.
+- Permet de communiquer même si la victime ne peut pas parler ou comprendre la langue.
+
+4. Personnalisation avancée
+Historique des phrases les plus utilisées pour un accès ultra-rapide.
+
+5. Mode mains-libres
+Déclenchement vocal de certaines commandes (ex : « Traduire », « Phrase d’urgence ») pour garder les mains libres.
+Lecture automatique de la traduction sans manipulation supplémentaire.
+
+7. Accessibilité renforcée
+Compatibilité avec les lecteurs d’écran.
+Taille de police ajustable et contraste élevé pour les situations de faible visibilité.
+
+9. Statistiques et feedback
+Statistiques d’utilisation pour identifier les langues ou phrases les plus sollicitées.
+Système de feedback pour signaler des phrases à ajouter ou corriger.
