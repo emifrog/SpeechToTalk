@@ -4,6 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { Picker } from '@react-native-picker/picker';
 import { Audio } from 'expo-av';
+import { soundFeedback, SoundType } from '../../services/soundFeedbackService';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -743,6 +744,8 @@ function HomeScreen() {
     if (!text) return;
     
     setIsTranslating(true);
+    // Jouer un son de bouton pour indiquer le début de la traduction
+    soundFeedback.playSound(SoundType.BUTTON_PRESS);
     
     try {
       // Utiliser notre service de traduction amélioré avec l'API Google Cloud Translation
@@ -753,6 +756,8 @@ function HomeScreen() {
         // L'erreur a déjà été gérée par le service de traduction
         // Nous n'ajoutons pas les erreurs à l'historique de conversation
         setTranslatedText(translatedResult);
+        // Jouer un son d'erreur
+        soundFeedback.playSound(SoundType.ERROR);
       } else {
         // Traduction réussie
         setTranslatedText(translatedResult);
@@ -768,6 +773,9 @@ function HomeScreen() {
         
         setConversationHistory(prevHistory => [...prevHistory, newEntry]);
         
+        // Jouer un son de succès pour indiquer que la traduction est terminée
+        soundFeedback.playSound(SoundType.TRANSLATION_COMPLETE);
+        
         // Lire la traduction à haute voix
         speakText(translatedResult);
       }
@@ -775,6 +783,8 @@ function HomeScreen() {
       console.error('Translation error:', error);
       // Cette partie ne devrait pas être atteinte car les erreurs sont gérées dans le service de traduction
       setTranslatedText(`[Erreur de traduction]`);
+      // Jouer un son d'erreur
+      soundFeedback.playSound(SoundType.ERROR);
     } finally {
       setIsTranslating(false);
     }
@@ -1011,6 +1021,8 @@ function HomeScreen() {
       const permissionGranted = await requestMicrophonePermission();
       if (!permissionGranted) {
         console.log('Microphone permission not granted');
+        // Jouer un son d'erreur pour indiquer que la permission n'a pas été accordée
+        soundFeedback.playSound(SoundType.ERROR);
         return;
       }
 
@@ -1019,20 +1031,28 @@ function HomeScreen() {
         if (!Voice) {
           console.error('Voice module is not available');
           setIsListening(false);
+          // Jouer un son d'erreur
+          soundFeedback.playSound(SoundType.ERROR);
           return;
         }
         
         if (typeof Voice.stop !== 'function') {
           console.error('Voice stop function is not available');
           setIsListening(false);
+          // Jouer un son d'erreur
+          soundFeedback.playSound(SoundType.ERROR);
           return;
         }
         
         try {
           await Voice.stop();
           console.log('Voice recognition stopped successfully');
+          // Jouer un son pour indiquer l'arrêt de l'écoute
+          soundFeedback.playSound(SoundType.STOP_LISTENING);
         } catch (stopError) {
           console.error('Error stopping voice recognition:', stopError);
+          // Jouer un son d'erreur
+          soundFeedback.playSound(SoundType.ERROR);
         } finally {
           setIsListening(false);
         }
@@ -1099,9 +1119,13 @@ function HomeScreen() {
               await Voice.start(sourceLanguage);
               console.log('Voice recognition started successfully');
               setIsListening(true);
+              // Jouer un son pour indiquer le début de l'écoute
+              soundFeedback.playSound(SoundType.START_LISTENING);
             } catch (delayedStartError) {
               console.error('Error starting voice recognition after delay:', delayedStartError);
               Alert.alert('Erreur', 'Impossible de démarrer la reconnaissance vocale. Veuillez réessayer.');
+              // Jouer un son d'erreur
+              soundFeedback.playSound(SoundType.ERROR);
             }
           }, 500);
         } catch (startError) {
@@ -1112,6 +1136,8 @@ function HomeScreen() {
     } catch (error) {
       console.error('Toggle listening error:', error);
       Alert.alert('Erreur', 'Impossible de démarrer ou arrêter la reconnaissance vocale.');
+      // Jouer un son d'erreur
+      soundFeedback.playSound(SoundType.ERROR);
     }
   };
 
@@ -1132,6 +1158,8 @@ function HomeScreen() {
   // Télécharger une langue pour l'utilisation hors ligne
   const handleDownloadLanguage = async (langCode: string) => {
     if (isConnected) {
+      // Jouer un son de bouton pour indiquer le début du téléchargement
+      soundFeedback.playSound(SoundType.BUTTON_PRESS);
       try {
         // Utiliser le service de téléchargement de langue amélioré
         const success = await downloadLanguage(langCode);
@@ -1139,6 +1167,11 @@ function HomeScreen() {
         // Mettre à jour la liste des langues téléchargées si le téléchargement a réussi
         if (success) {
           loadDownloadedLanguages();
+          // Jouer un son de succès pour indiquer que le téléchargement est terminé
+          soundFeedback.playSound(SoundType.SUCCESS);
+        } else {
+          // Jouer un son d'erreur si le téléchargement a échoué
+          soundFeedback.playSound(SoundType.ERROR);
         }
       } catch (error) {
         console.error('Error downloading language:', error);
@@ -1146,17 +1179,23 @@ function HomeScreen() {
           "Erreur",
           "Impossible de télécharger la langue. Veuillez réessayer plus tard."
         );
+        // Jouer un son d'erreur
+        soundFeedback.playSound(SoundType.ERROR);
       }
     } else {
       Alert.alert(
         "Connexion requise",
         "Vous devez être connecté à Internet pour télécharger une langue."
       );
+      // Jouer un son d'erreur
+      soundFeedback.playSound(SoundType.ERROR);
     }
   };
 
   // Utiliser une phrase d'urgence prédéfinie
   const handleEmergencyPhrase = (phrase: EmergencyPhrase) => {
+    // Jouer un son de bouton pour indiquer la sélection d'une phrase d'urgence
+    soundFeedback.playSound(SoundType.BUTTON_PRESS);
     setSpokenText(phrase.fr);
     translateTextCallback(phrase.fr);
   };
@@ -1273,7 +1312,6 @@ function HomeScreen() {
             <View style={styles.messageBubbleSource}>
               <View style={styles.bubbleHeader}>
                 <MaterialCommunityIcons name="account" size={16} color={colors.primary} />
-                <Text style={styles.bubbleHeaderText}>Vous ({LANGUAGES.find(l => l.code === sourceLanguage)?.name})</Text>
               </View>
               <Text style={styles.messageText}>{spokenText}</Text>
             </View>
@@ -1312,8 +1350,8 @@ function HomeScreen() {
           ) : null}
         </View>
 
-                {/* Barre d'outils */}
-                <View style={styles.toolbarContainer}>
+        {/* Barre d'outils */}
+        <View style={styles.toolbarContainer}>
           <TouchableOpacity 
             style={[styles.micButton, isListening && styles.micButtonActive]}
             onPress={toggleListening}
@@ -1345,7 +1383,7 @@ function HomeScreen() {
         </View>
       )}
 
-        {/* Historique de conversation */}
+      {/* Historique de conversation */}
       <View style={styles.sectionHeader}>
         <MaterialCommunityIcons name="history" size={20} color={colors.primary} />
         <Text style={styles.sectionTitle}>Historique de conversation</Text>
