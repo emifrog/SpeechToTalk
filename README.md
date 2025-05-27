@@ -109,7 +109,13 @@ Les APIs Google Cloud sont soumises à des quotas. Pour éviter de dépasser ces
 
 ## Captures d'écran
 
-[Insérer des captures d'écran de l'application ici]
+<div align="center">
+  <img src="assets/screenshots/1.png" alt="Écran principal de traduction" width="280" />
+  <img src="assets/screenshots/2.png" alt="Sélection des langues et détection automatique" width="280" />
+  <img src="assets/screenshots/3.png" alt="Traduction de médias" width="280" />
+</div>
+
+*De gauche à droite: Écran principal de traduction, Sélection des langues avec détection automatique, Traduction de médias*
 
 ## Contribution
 
