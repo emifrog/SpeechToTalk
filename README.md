@@ -37,19 +37,25 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel con�
 
 3. Configurez les APIs de traduction
 
-   L'application utilise les APIs Google Cloud pour la traduction et la reconnaissance de texte dans les images. Vous devez configurer vos propres clés API :
+   L'application utilise les APIs Google Cloud pour la traduction, la reconnaissance de texte dans les images et la détection automatique de langue. Vous devez configurer vos propres clés API :
 
-   - Créez un fichier `config/index.ts` avec le contenu suivant :
+   - Copiez le fichier `.env.example` en `.env` à la racine du projet :
 
-   ```typescript
-   // Clé API pour Google Cloud Translation et Vision
-   export const GOOGLE_CLOUD_API_KEY = 'VOTRE_CLE_API_GOOGLE_CLOUD';
+   ```bash
+   cp .env.example .env
+   ```
+
+   - Modifiez le fichier `.env` pour ajouter votre clé API Google Cloud :
+
+   ```
+   GOOGLE_CLOUD_API_KEY=VOTRE_CLE_API_GOOGLE_CLOUD
    ```
 
    - Pour obtenir une clé API Google Cloud :
      1. Créez un projet sur [Google Cloud Console](https://console.cloud.google.com/)
-     2. Activez les APIs Cloud Translation et Cloud Vision
-     3. Créez une clé API et copiez-la dans le fichier de configuration
+     2. Activez les APIs Cloud Translation, Cloud Vision et Cloud Speech-to-Text
+     3. Créez une clé API et copiez-la dans le fichier `.env`
+     4. Assurez-vous de ne jamais partager ou committer ce fichier dans Git
 
 4. Démarrez l'application
 
@@ -103,6 +109,21 @@ Pour optimiser l'utilisation des APIs et permettre un fonctionnement hors ligne,
 - **Optimisation du stockage** : Compression des données pour réduire l'espace utilisé
 - **Nettoyage automatique** : Suppression des traductions les moins utilisées lorsque la limite de cache est atteinte
 
+### Sécurité des clés API
+
+Les clés API Google Cloud donnent accès à des services payants et doivent être protégées. SpeechToTalk implémente les bonnes pratiques suivantes :
+
+- **Variables d'environnement** : Les clés API sont stockées dans un fichier `.env` qui n'est pas partagé sur Git
+- **Fichier d'exemple** : Un fichier `.env.example` est fourni comme modèle sans clés réelles
+- **Vérification d'intégrité** : L'application vérifie que les clés sont bien définies au démarrage
+
+Pour sécuriser vos clés API :
+
+- Ne commettez jamais le fichier `.env` dans Git
+- Limitez les API activées pour chaque clé dans la console Google Cloud
+- Utilisez des restrictions d'API (domaines, adresses IP) quand c'est possible
+- Surveillez régulièrement l'utilisation de vos clés API
+
 ### Gestion des quotas d'API
 
 Les APIs Google Cloud sont soumises à des quotas. Pour éviter de dépasser ces limites :
@@ -135,6 +156,7 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 - **Détection automatique de langue** : Ajout d'une fonctionnalité permettant de détecter automatiquement la langue parlée grâce à l'API Google Cloud Speech-to-Text
 - **Interface de sélection de langue améliorée** : Ajout d'un bouton "Auto" pour activer/désactiver la détection automatique
+- **Sécurisation des clés API** : Mise en place d'un système de variables d'environnement pour protéger les clés API
 - **Optimisation des performances** : Amélioration de la réactivité lors de la détection et traduction en temps réel
 - **Corrections de bugs** : Résolution de problèmes d'interface et de styles dupliqués
 
