@@ -437,7 +437,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 22,
     fontWeight: 'bold',
-    color: '#00838f',
+    color: '#144291',
   },
   languageSelector: {
     flexDirection: 'row',
@@ -450,7 +450,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: '600',
     marginRight: 10,
-    color: '#00838f',
+    color: '#144291',
   },
   pickerContainer: {
     flex: 1,
@@ -530,7 +530,7 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   speakButton: {
-    backgroundColor: '#00838f',
+    backgroundColor: '#144291',
     width: 48,
     height: 48,
     borderRadius: 24,
@@ -543,17 +543,17 @@ const styles = StyleSheet.create({
     elevation: 3,
   },
   activeCard: {
-    borderColor: '#00838f',
+    borderColor: '#144291',
     borderWidth: 2,
     backgroundColor: 'rgba(0, 131, 143, 0.05)',
   },
   lastPlayedCard: {
-    borderColor: '#00838f',
+    borderColor: '#144291',
     borderWidth: 1,
     backgroundColor: 'rgba(0, 131, 143, 0.02)',
   },
   activeTranslation: {
-    color: '#00838f',
+    color: '#144291',
     fontWeight: 'bold',
   },
   activeSpeakButton: {

@@ -647,7 +647,7 @@ const styles = StyleSheet.create({
   loadingText: {
     marginTop: 12,
     fontSize: 16,
-    color: '#00838f',
+    color: '#144291',
     fontWeight: '500',
     letterSpacing: 0.3,
   },
@@ -691,7 +691,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: '#00838f',
+    borderColor: '#144291',
   },
   recognizedText: {
     fontSize: 16,
@@ -722,7 +722,7 @@ const styles = StyleSheet.create({
   historyItemTitle: {
     fontSize: 14,
     fontWeight: 'bold',
-    color: '#00838f',
+    color: '#144291',
     marginBottom: 6,
     letterSpacing: 0.3,
   },

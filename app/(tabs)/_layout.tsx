@@ -96,7 +96,7 @@ export default function TabLayout() {
         <Tabs.Screen
           name="media"
           options={{
-            title: 'Photos/Fichiers',
+            title: 'Documents',
             tabBarIcon: ({ color }) => (
               <View style={styles.tabIconContainer}>
                 <MaterialCommunityIcons name="file-image" size={28} color={color} />

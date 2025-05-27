@@ -4,7 +4,6 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import { Picker } from '@react-native-picker/picker';
 import { Audio } from 'expo-av';
-import { soundFeedback, SoundType } from '../../services/soundFeedbackService';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
@@ -20,6 +19,7 @@ import {
 } from 'react-native';
 import { AppCard } from '../../components/ui/AppCard';
 import { StandardHeader } from '../../components/ui/AppHeader';
+import { soundFeedback, SoundType } from '../../services/soundFeedbackService';
 
 // Importer notre service de traduction
 import { downloadLanguage, LANGUAGES, translateText } from '../../services/translationService';
@@ -582,7 +582,7 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
   loadingText: {
     marginLeft: 10,
     fontSize: 16,
-    color: colors.primary, // Turquoise/teal: #00838f
+    color: colors.primary, // Turquoise/teal: #144291
     fontStyle: 'italic',
   },
   recordButtonContainer: {
@@ -592,7 +592,7 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     marginTop: 10,
   },
   recordButton: {
-    backgroundColor: colors.primary, // Turquoise/teal: #00838f
+    backgroundColor: colors.primary, // Turquoise/teal: #144291
     width: 80,
     height: 80,
     borderRadius: 40,
@@ -605,7 +605,7 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     shadowRadius: 5,
   },
   recordingButton: {
-    backgroundColor: colors.secondary, // Orange: #ff6f00
+    backgroundColor: colors.secondary, // Orange: #d20b12
   },
   recordButtonInner: {
     width: 72,
@@ -625,12 +625,12 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: colors.secondary, // Orange: #ff6f00
+    backgroundColor: colors.secondary, // Orange: #d20b12
     marginRight: 8,
   },
   recordingText: {
     fontSize: 14,
-    color: colors.secondary, // Orange: #ff6f00
+    color: colors.secondary, // Orange: #d20b12
     fontWeight: '500',
   },
   emergencyPhraseButton: {
@@ -643,7 +643,7 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
     marginBottom: 8,
     minWidth: 150,
     elevation: 2,
-    shadowColor: colors.secondary, // Orange: #ff6f00
+    shadowColor: colors.secondary, // Orange: #d20b12
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.2,
     shadowRadius: 2,
@@ -1220,7 +1220,7 @@ function HomeScreen() {
                 selectedValue={sourceLanguage}
                 style={styles.picker}
                 onValueChange={(value) => setSourceLanguage(value)}
-                dropdownIconColor="#00838f"
+                dropdownIconColor="#144291"
               >
                 {LANGUAGES.map((lang) => (
                   <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
@@ -1256,7 +1256,7 @@ function HomeScreen() {
                     console.warn('Error resetting TTS:', error);
                   }
                 } }
-                dropdownIconColor="#00838f"
+                dropdownIconColor="#144291"
               >
                 {LANGUAGES.map((lang) => (
                   <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
