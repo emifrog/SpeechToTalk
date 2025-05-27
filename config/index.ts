@@ -1,9 +1,16 @@
-// This file provides API keys for the application
-// Import from '../config' instead of '../config/keys'
+// Ce fichier fournit les clés API pour l'application en les chargeant depuis les variables d'environnement
+import * as dotenv from 'dotenv';
 
-// Since keys.ts is in .gitignore, we need to provide the API key here
-// In production, this should be loaded from an environment variable or secure storage
-export const GOOGLE_CLOUD_API_KEY = 'AIzaSyDzBUV4Ogznth5CfowZB7_esRM0yYbRECE';
+// Charger les variables d'environnement depuis le fichier .env
+dotenv.config();
 
-// Note: In a real production app, you should never hardcode API keys
-// This is just for development purposes
+// Récupérer la clé API Google Cloud depuis les variables d'environnement
+export const GOOGLE_CLOUD_API_KEY = process.env.GOOGLE_CLOUD_API_KEY || '';
+
+// Vérifier si la clé API est définie
+if (!GOOGLE_CLOUD_API_KEY) {
+  console.warn(
+    'ATTENTION: La clé API Google Cloud n\'est pas définie. ' +
+    'Veuillez créer un fichier .env à la racine du projet avec GOOGLE_CLOUD_API_KEY=votre_clé_api'
+  );
+}

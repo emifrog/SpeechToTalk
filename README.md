@@ -1,8 +1,12 @@
-# SpeechToTalk 💬
+# SpeechToTalk 
+
+<div align="center">
+  <img src="assets/images/logo.png" alt="Logo" width="280" />
+</div>
 
 ## À propos de l'application
 
-SpeechToTalk est une application mobile de traduction vocale en temps réel conçue spécifiquement pour les chefs d'agrès sapeurs-pompiers qui sont au contact de personnes ne parlant pas français. L'application utilise la reconnaissance vocale pour capturer la parole, la traduit dans la langue cible, et peut même prononcer la traduction à haute voix. Grâce à son système de cache, elle peut fonctionner hors ligne dans des situations d'urgence.
+SpeechToTalk est une application mobile de traduction vocale en temps réel conçue spécifiquement pour les **sapeurs-pompiers** qui sont au contact de personnes ne parlant pas français. L'application utilise la reconnaissance vocale pour capturer la parole, la traduit dans la langue cible, et peut même prononcer la traduction à haute voix. Grâce à son système de cache, elle peut fonctionner hors ligne dans des situations d'urgence.
 
 ## Fonctionnalités principales
 
