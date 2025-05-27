@@ -4,10 +4,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import React, { useState } from 'react';
 import { Alert, Platform, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { LANGUAGES, translateText } from '../../services/translationService';
-import { StandardHeader } from '../../components/ui/AppHeader';
 import { AppButton } from '../../components/ui/AppButton';
 import { AppCard } from '../../components/ui/AppCard';
+import { StandardHeader } from '../../components/ui/AppHeader';
+import { LANGUAGES, translateText } from '../../services/translationService';
 
 // Import conditionnels pour éviter les erreurs dans les environnements non compatibles
 let Tts: any = null;
@@ -51,13 +51,13 @@ if (!isWeb) {
 // Si le module n'a pas pu être chargé, utiliser l'implémentation factice
 if (!Tts) Tts = createMockTts();
 
-// Type pour les phrases d&apos;urgence
+// Type pour les phrases d'urgence
 interface EmergencyPhrase {
   fr: string;
   translations: Record<string, string>;
 }
 
-// Phrases d&apos;urgence par catégorie
+// Phrases d'urgence par catégorie
 const EMERGENCY_PHRASES: Record<string, EmergencyPhrase[]> = {
   medical: [
     { fr: "Où avez-vous mal ?", translations: { en: "Where does it hurt?" } },
@@ -69,11 +69,11 @@ const EMERGENCY_PHRASES: Record<string, EmergencyPhrase[]> = {
     { fr: "Avez-vous perdu connaissance ?", translations: { en: "Did you lose consciousness?" } },
   ],
   fire: [
-    { fr: "Y a-t-il d&apos;autres personnes à l&apos;intérieur ?", translations: { en: "Are there other people inside?" } },
-    { fr: "Combien de personnes sont à l&apos;intérieur ?", translations: { en: "How many people are inside?" } },
+    { fr: "Y a-t-il d'autres personnes à l'intérieur ?", translations: { en: "Are there other people inside?" } },
+    { fr: "Combien de personnes sont à l'intérieur ?", translations: { en: "How many people are inside?" } },
     { fr: "Où se trouvent-elles ?", translations: { en: "Where are they?" } },
-    { fr: "Y a-t-il des produits dangereux à l&apos;intérieur ?", translations: { en: "Are there any hazardous materials inside?" } },
-    { fr: "Depuis combien de temps l&apos;incendie a-t-il commencé ?", translations: { en: "How long has the fire been burning?" } },
+    { fr: "Y a-t-il des produits dangereux à l'intérieur ?", translations: { en: "Are there any hazardous materials inside?" } },
+    { fr: "Depuis combien de temps l'incendie a-t-il commencé ?", translations: { en: "How long has the fire been burning?" } },
   ],
   reassurance: [
     { fr: "Nous sommes là pour vous aider.", translations: { en: "We are here to help you." } },
@@ -85,7 +85,7 @@ const EMERGENCY_PHRASES: Record<string, EmergencyPhrase[]> = {
   evacuation: [
     { fr: "Nous devons évacuer le bâtiment.", translations: { en: "We need to evacuate the building." } },
     { fr: "Suivez-moi, s&apos;il vous plaît.", translations: { en: "Please follow me." } },
-    { fr: "Ne prenez pas l&apos;ascenseur.", translations: { en: "Do not use the elevator." } },
+    { fr: "Ne prenez pas l'ascenseur.", translations: { en: "Do not use the elevator." } },
     { fr: "Utilisez les escaliers.", translations: { en: "Use the stairs." } },
     { fr: "Restez baissé pour éviter la fumée.", translations: { en: "Stay low to avoid the smoke." } },
   ],
@@ -383,10 +383,10 @@ export default function EmergencyPhrasesScreen() {
         
         <View style={styles.infoContainer}>
           <Text style={styles.infoText}>
-            Appuyez sur une phrase pour l&apos;écouter en français puis dans la langue sélectionnée.
+            Appuyez sur une phrase pour l&#39;écouter en français puis dans la langue sélectionnée.
           </Text>
           <Text style={styles.infoText}>
-            Ces phrases sont conçues pour aider les sapeurs-pompiers à communiquer avec des personnes ne parlant pas français lors d&apos;interventions d&apos;urgence.
+            Ces phrases sont conçues pour aider les sapeurs-pompiers à communiquer avec des personnes ne parlant pas français lors d&#39;interventions d&#39;urgence.
           </Text>
         </View>
       </ScrollView>

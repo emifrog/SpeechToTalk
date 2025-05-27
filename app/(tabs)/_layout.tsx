@@ -2,23 +2,17 @@ import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
 import React, { useState } from 'react';
-import { Platform, StyleSheet, Text, useColorScheme, View } from 'react-native';
+import { Platform, StyleSheet, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AppHeader } from '@/components/AppHeader';
 import { HapticTab } from '@/components/HapticTab';
 import TabBarBackground from '@/components/ui/TabBarBackground';
 
-// Composant Badge personnalisé pour les onglets
-const TabBadge = ({ count, color }: { count: number; color: string }) => {
-  if (count <= 0) return null;
-  
-  return (
-    <View style={[styles.badge, { backgroundColor: color }]}>
-      <Text style={styles.badgeText}>{count > 9 ? '9+' : count}</Text>
-    </View>
-  );
-};
+// Importer la configuration des routes
+import { routes } from './routes';
+
+// Composant d'indicateur de progression statique (sans animation)
 
 // Composant d'indicateur de progression statique (sans animation)
 const LoadingIndicator = ({ isLoading, color }: { isLoading: boolean; color: string }) => {
@@ -33,8 +27,7 @@ export default function TabLayout() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
   
-  // État pour simuler des notifications et le chargement
-  const [phrasesNotifications] = useState(3); // Nous utilisons seulement la valeur, pas le setter
+  // État pour simuler le chargement
   const [isLoading, setIsLoading] = useState(false);
   
   // Simuler un chargement lors des changements d'onglet
@@ -50,9 +43,11 @@ export default function TabLayout() {
       <AppHeader />
       <LoadingIndicator isLoading={isLoading} color={colors.primary} />
       <Tabs
+      // Définir explicitement les onglets à afficher
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         headerShown: false,
+        // Utiliser les options standard pour la TabBar
         tabBarButton: (props) => (
           <HapticTab {...props} onPress={(e) => {
             handleTabPress();
@@ -70,51 +65,46 @@ export default function TabLayout() {
         // Ajouter une animation de transition entre les onglets
         animation: 'fade',
       }}>
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: 'Traducteur',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabIconContainer}>
-              <MaterialCommunityIcons name="translate" size={28} color={color} />
-            </View>
-          ),
-        }}
-      />
-            <Tabs.Screen
-        name="explore"
-        options={{
-          title: 'Phrases',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabIconContainer}>
-              <MaterialCommunityIcons name="message-text" size={28} color={color} />
-              {/*<TabBadge count={phrasesNotifications} color={colors.secondary} />*/}  
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="media"
-        options={{
-          title: 'Photos/Fichiers',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabIconContainer}>
-              <MaterialCommunityIcons name="file-image" size={28} color={color} />
-            </View>
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="settings"
-        options={{
-          title: 'Paramètres',
-          tabBarIcon: ({ color }) => (
-            <View style={styles.tabIconContainer}>
-              <MaterialCommunityIcons name="cog" size={28} color={color} />
-            </View>
-          ),
-        }}
-      />
+      {/* Définir explicitement les onglets à afficher en utilisant la configuration des routes */}
+      {routes.includes('index') && (
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Traducteur',
+            tabBarIcon: ({ color }) => (
+              <View style={styles.tabIconContainer}>
+                <MaterialCommunityIcons name="translate" size={28} color={color} />
+              </View>
+            ),
+          }}
+        />
+      )}
+      {routes.includes('explore') && (
+        <Tabs.Screen
+          name="explore"
+          options={{
+            title: 'Phrases',
+            tabBarIcon: ({ color }) => (
+              <View style={styles.tabIconContainer}>
+                <MaterialCommunityIcons name="message-text" size={28} color={color} />
+              </View>
+            ),
+          }}
+        />
+      )}
+      {routes.includes('media') && (
+        <Tabs.Screen
+          name="media"
+          options={{
+            title: 'Photos/Fichiers',
+            tabBarIcon: ({ color }) => (
+              <View style={styles.tabIconContainer}>
+                <MaterialCommunityIcons name="file-image" size={28} color={color} />
+              </View>
+            ),
+          }}
+        />
+      )}
     </Tabs>
     </SafeAreaProvider>
   );
