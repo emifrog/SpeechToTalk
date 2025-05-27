@@ -334,44 +334,55 @@ const MediaTranslator: React.FC = () => {
     >
       
       {/* Sélection des langues */}
-      <View style={styles.languageSelectionContainer}>
-        <View style={styles.languagePickerContainer}>
-          <Text style={styles.languageLabel}>De :</Text>
-          <Picker
-            selectedValue={sourceLang}
-            style={styles.languagePicker}
-            onValueChange={(itemValue) => setSourceLang(itemValue)}
-          >
-            {LANGUAGES.map((lang) => (
-              <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
-            ))}
-          </Picker>
-        </View>
-        
-        <TouchableOpacity 
-          style={styles.swapLanguageButton}
-          onPress={() => {
-            // Échanger les langues source et cible
-            const temp = sourceLang;
-            setSourceLang(targetLang);
-            setTargetLang(temp);
-          }}
-          activeOpacity={0.7}
-        >
-          <MaterialCommunityIcons name="swap-horizontal" size={20} color="#fff" />
-        </TouchableOpacity>
-        
-        <View style={styles.languagePickerContainer}>
-          <Text style={styles.languageLabel}>Vers :</Text>
-          <Picker
-            selectedValue={targetLang}
-            style={styles.languagePicker}
-            onValueChange={(itemValue) => setTargetLang(itemValue)}
-          >
-            {LANGUAGES.map((lang) => (
-              <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
-            ))}
-          </Picker>
+      <View style={styles.languageCard}>
+        <View style={styles.languageSelectionContainerVertical}>
+          {/* Sélecteur de langue source */}
+          <View style={styles.languagePickerContainerVertical}>
+            <Text style={styles.languageLabel}>De :</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={sourceLang}
+                style={styles.languagePicker}
+                onValueChange={(itemValue) => setSourceLang(itemValue)}
+              >
+                {LANGUAGES.map((lang) => (
+                  <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
+                ))}
+              </Picker>
+            </View>
+          </View>
+          
+          {/* Bouton d'échange de langues */}
+          <View style={styles.swapButtonContainer}>
+            <TouchableOpacity 
+              style={styles.swapLanguageButtonVertical}
+              onPress={() => {
+                // Échanger les langues source et cible
+                const temp = sourceLang;
+                setSourceLang(targetLang);
+                setTargetLang(temp);
+              }}
+              activeOpacity={0.7}
+            >
+              <MaterialCommunityIcons name="swap-vertical" size={22} color="#fff" />
+            </TouchableOpacity>
+          </View>
+          
+          {/* Sélecteur de langue cible */}
+          <View style={styles.languagePickerContainerVertical}>
+            <Text style={styles.languageLabel}>Vers :</Text>
+            <View style={styles.pickerContainer}>
+              <Picker
+                selectedValue={targetLang}
+                style={styles.languagePicker}
+                onValueChange={(itemValue) => setTargetLang(itemValue)}
+              >
+                {LANGUAGES.map((lang) => (
+                  <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
+                ))}
+              </Picker>
+            </View>
+          </View>
         </View>
       </View>
       
@@ -528,16 +539,45 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.md,
     paddingTop: Theme.spacing.sm,
   },
+  languageCard: {
+    backgroundColor: Theme.colors.surface,
+    borderRadius: Theme.borderRadius.lg,
+    padding: Theme.spacing.md,
+    marginBottom: Theme.spacing.md,
+    ...Theme.shadows.medium,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.light,
+  },
   languageSelectionContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 60,
     position: 'relative',
+    paddingBottom: 20,
+  },
+  languageSelectionContainerVertical: {
+    flexDirection: 'column',
+    justifyContent: 'space-between',
+    alignItems: 'stretch',
   },
   languagePickerContainer: {
     flex: 1,
     marginHorizontal: 6,
+  },
+  languagePickerContainerVertical: {
+    width: '100%',
+    marginBottom: 10,
+  },
+  swapButtonContainer: {
+    alignItems: 'center',
+    marginVertical: 8,
+  },
+  pickerContainer: {
+    borderWidth: 1,
+    borderColor: Theme.colors.border.light,
+    borderRadius: Theme.borderRadius.md,
+    overflow: 'hidden',
+    backgroundColor: Theme.colors.background,
   },
   languageLabel: {
     fontSize: Theme.typography.fontSize.md,
@@ -546,25 +586,33 @@ const styles = StyleSheet.create({
     fontWeight: Theme.typography.fontWeight.semiBold as '600',
   },
   languagePicker: {
-    backgroundColor: Theme.colors.surface,
-    borderRadius: Theme.borderRadius.md,
-    borderWidth: 1,
-    borderColor: Theme.colors.border.light,
-    ...Theme.shadows.small,
+    height: 45,
+    width: '100%',
   },
   swapLanguageButton: {
     position: 'absolute',
-    top: 60,
+    bottom: -15,
     left: '50%',
-    marginLeft: -18,
-    backgroundColor: Theme.colors.secondary,
-    width: Theme.buttons.icon.small.size,
-    height: Theme.buttons.icon.small.size,
-    borderRadius: Theme.buttons.icon.small.borderRadius,
+    marginLeft: -20,
+    backgroundColor: Theme.colors.primary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 1,
     ...Theme.shadows.medium,
+    elevation: 4,
+  },
+  swapLanguageButtonVertical: {
+    backgroundColor: Theme.colors.secondary,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Theme.shadows.medium,
+    elevation: 4,
   },
   actionButtonsContainer: {
     flexDirection: 'row',
