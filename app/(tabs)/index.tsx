@@ -20,9 +20,12 @@ import {
 import { AppCard } from '../../components/ui/AppCard';
 import { StandardHeader } from '../../components/ui/AppHeader';
 import { soundFeedback, SoundType } from '../../services/soundFeedbackService';
+import { AutoDetectLanguageButton } from '../../components/AutoDetectLanguageButton';
 
 // Importer notre service de traduction
 import { downloadLanguage, LANGUAGES, translateText } from '../../services/translationService';
+// Importer notre service de détection de langue
+import { detectLanguageFromText } from '../../services/languageDetectionService';
 
 // Import conditionnels pour éviter les erreurs dans les environnements non compatibles
 let Voice: any = null;
@@ -327,6 +330,49 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
   languageSelectors: {
     marginVertical: 10,
     marginHorizontal: 16,
+  },
+  autoDetectContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  autoDetectButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: colors.primary,
+    borderRadius: 15,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    marginLeft: 8,
+  },
+  autoDetectButtonActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+  autoDetectText: {
+    fontSize: 12,
+    color: colors.primary,
+    marginLeft: 4,
+  },
+  autoDetectTextActive: {
+    color: '#fff',
+  },
+  detectedLanguageText: {
+    fontSize: 12,
+    color: '#4caf50',
+    fontStyle: 'italic',
+    marginTop: 4,
+  },
+  pickerDisabled: {
+    opacity: 0.7,
+  },
+  pickerLabel: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: colors.primary,
+    marginBottom: 4,
   },
   languageCard: {
     backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff',
@@ -675,25 +721,6 @@ const createStyles = (colorScheme: string | null | undefined, colors: any) => St
   },
   actionButtonsContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginBottom: 16,
-  },
-  actionButtonSpacing: {
-    flex: 1,
-    marginHorizontal: 4,
-  },
-  cardContainer: {
-    backgroundColor: colorScheme === 'dark' ? '#1a1a1a' : '#fff',
-    borderRadius: 16,
-    padding: 16,
-    elevation: 4,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.1,
-    shadowRadius: 8,
-    marginBottom: 10,
   },
 });
 
@@ -707,7 +734,8 @@ function HomeScreen() {
   const [sourceLanguage, setSourceLanguage] = useState('fr');
   const [targetLanguage, setTargetLanguage] = useState('en');
   const [isTranslating, setIsTranslating] = useState(false);
-  // Mode hors ligne utilisé quand pas de connexion mais langues téléchargées disponibles
+  const [autoDetectLanguage, setAutoDetectLanguage] = useState(false);
+  const [detectedLanguage, setDetectedLanguage] = useState<string | null>(null);
   const [downloadedLanguages, setDownloadedLanguages] = useState<string[]>([]);
   const [conversationHistory, setConversationHistory] = useState<ConversationEntry[]>([]);
   const [isConnected, setIsConnected] = useState(true);
@@ -738,7 +766,7 @@ function HomeScreen() {
       console.error('TTS error:', error);
     }
   }, []);
-  
+
   // Utiliser useCallback pour éviter les dépendances cycliques
   const translateTextCallback = useCallback(async (text: string) => {
     if (!text) return;
@@ -748,8 +776,31 @@ function HomeScreen() {
     soundFeedback.playSound(SoundType.BUTTON_PRESS);
     
     try {
+      // Si la détection automatique est activée, détecter la langue du texte
+      let sourceLang = sourceLanguage;
+      
+      if (autoDetectLanguage) {
+        try {
+          const detectionResult = await detectLanguageFromText(text);
+          if (detectionResult.isReliable) {
+            sourceLang = detectionResult.detectedLanguage;
+            setDetectedLanguage(sourceLang);
+            // Mettre à jour l'état de la langue source pour l'interface utilisateur
+            setSourceLanguage(sourceLang);
+          } else {
+            // Si la détection n'est pas fiable, utiliser la langue source définie
+            setDetectedLanguage(null);
+          }
+        } catch (detectionError) {
+          console.error('Language detection error:', detectionError);
+          setDetectedLanguage(null);
+        }
+      } else {
+        setDetectedLanguage(null);
+      }
+      
       // Utiliser notre service de traduction amélioré avec l'API Google Cloud Translation
-      const translatedResult = await translateText(text, sourceLanguage, targetLanguage);
+      const translatedResult = await translateText(text, sourceLang, targetLanguage);
       
       // Vérifier si la traduction est une erreur (format [message d'erreur])
       if (translatedResult.startsWith('[') && translatedResult.endsWith(']')) {
@@ -766,7 +817,7 @@ function HomeScreen() {
         const newEntry: ConversationEntry = {
           original: text,
           translated: translatedResult,
-          sourceLanguage,
+          sourceLanguage: autoDetectLanguage && detectedLanguage ? detectedLanguage : sourceLanguage,
           targetLanguage,
           timestamp: new Date().toISOString(),
         };
@@ -788,7 +839,7 @@ function HomeScreen() {
     } finally {
       setIsTranslating(false);
     }
-  }, [sourceLanguage, targetLanguage, speakText]);
+  }, [sourceLanguage, targetLanguage, speakText, autoDetectLanguage, detectedLanguage]);
 
   // Initialisation
   useEffect(() => {
@@ -1141,8 +1192,6 @@ function HomeScreen() {
     }
   };
 
-  // Nous utilisons translateTextCallback défini plus haut au lieu de cette fonction
-
   // Charger les langues téléchargées
   const loadDownloadedLanguages = async () => {
     try {
@@ -1214,18 +1263,29 @@ function HomeScreen() {
       >
         <View style={styles.languageCard}>
           <View style={styles.languageSelector}>
-            <Text style={styles.languageLabel}>De:</Text>
-            <View style={styles.pickerContainer}>
+            <View style={{flexDirection: 'row', alignItems: 'center'}}>
               <Picker
                 selectedValue={sourceLanguage}
-                style={styles.picker}
-                onValueChange={(value) => setSourceLanguage(value)}
-                dropdownIconColor="#144291"
+                style={[styles.picker, autoDetectLanguage ? {opacity: 0.7} : {}]}
+                onValueChange={(value) => {
+                  setSourceLanguage(value);
+                  // Désactiver la détection automatique si l'utilisateur change manuellement la langue
+                  if (autoDetectLanguage) setAutoDetectLanguage(false);
+                }}
+                enabled={!autoDetectLanguage}
+                dropdownIconColor={autoDetectLanguage ? '#aaaaaa' : '#144291'}
               >
                 {LANGUAGES.map((lang) => (
                   <Picker.Item key={lang.code} label={lang.name} value={lang.code} />
                 ))}
               </Picker>
+              <AutoDetectLanguageButton
+                isActive={autoDetectLanguage}
+                onToggle={() => setAutoDetectLanguage(!autoDetectLanguage)}
+                detectedLanguage={detectedLanguage}
+                languageName={detectedLanguage ? LANGUAGES.find(l => l.code === detectedLanguage)?.name : undefined}
+                primaryColor={colors.primary}
+              />
             </View>
           </View>
 

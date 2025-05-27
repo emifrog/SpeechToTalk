@@ -7,6 +7,7 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel con�
 ## Fonctionnalités principales
 
 - **Traduction vocale en temps réel** : Parlez dans votre langue et obtenez une traduction instantanée
+- **Détection automatique de langue** : Identification automatique de la langue parlée pour une communication plus rapide en situation d'urgence
 - **Interface utilisateur intuitive** : Design moderne et cohérent avec des composants réutilisables
 - **Phrases d'urgence prédéfinies** : Accès rapide à des phrases essentielles pour les situations d'urgence médicales
 - **Traduction de médias** : Possibilité de traduire du texte à partir d'images et de documents
@@ -83,10 +84,11 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel con�
 
 ### APIs de traduction
 
-L'application utilise principalement deux APIs Google Cloud :
+L'application utilise principalement trois APIs Google Cloud :
 
 1. **Google Cloud Translation API** : Pour la traduction de texte entre différentes langues
 2. **Google Cloud Vision API** : Pour la reconnaissance de texte dans les images
+3. **Google Cloud Speech-to-Text API** : Pour la détection automatique de la langue parlée
 
 ### Système de cache intelligent
 
@@ -119,7 +121,14 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 ## Améliorations récentes
 
-### Version 2.1.0 (Mai 2025)
+### Version 2.2.0 (Mai 2025)
+
+- **Détection automatique de langue** : Ajout d'une fonctionnalité permettant de détecter automatiquement la langue parlée grâce à l'API Google Cloud Speech-to-Text
+- **Interface de sélection de langue améliorée** : Ajout d'un bouton "Auto" pour activer/désactiver la détection automatique
+- **Optimisation des performances** : Amélioration de la réactivité lors de la détection et traduction en temps réel
+- **Corrections de bugs** : Résolution de problèmes d'interface et de styles dupliqués
+
+### Version 2.1.0 (Avril 2025)
 
 - **Simplification de la barre de navigation** : Réduction à trois onglets principaux (Traducteur, Phrases, Documents) pour une expérience utilisateur plus fluide
 - **Refonte des paramètres** : Intégration des paramètres dans l'écran de feedback pour une meilleure organisation
