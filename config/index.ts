@@ -1,16 +1,39 @@
-// Ce fichier fournit les clés API pour l'application en les chargeant depuis les variables d'environnement
-import * as dotenv from 'dotenv';
+// Ce fichier fournit les clés API pour l'application
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// Charger les variables d'environnement depuis le fichier .env
-dotenv.config();
+// Variable pour stocker la clé API
+let apiKey = '';
 
-// Récupérer la clé API Google Cloud depuis les variables d'environnement
-export const GOOGLE_CLOUD_API_KEY = process.env.GOOGLE_CLOUD_API_KEY || '';
+// Fonction pour charger la clé API depuis AsyncStorage
+export const loadApiKey = async () => {
+  try {
+    const storedKey = await AsyncStorage.getItem('GOOGLE_CLOUD_API_KEY');
+    if (storedKey) {
+      apiKey = storedKey;
+      return storedKey;
+    }
+  } catch (error) {
+    console.error('Erreur lors du chargement de la clé API:', error);
+  }
+  return '';
+};
 
-// Vérifier si la clé API est définie
-if (!GOOGLE_CLOUD_API_KEY) {
-  console.warn(
-    'ATTENTION: La clé API Google Cloud n\'est pas définie. ' +
-    'Veuillez créer un fichier .env à la racine du projet avec GOOGLE_CLOUD_API_KEY=votre_clé_api'
-  );
-}
+// Fonction pour définir la clé API
+export const setApiKey = async (key: string) => {
+  try {
+    await AsyncStorage.setItem('GOOGLE_CLOUD_API_KEY', key);
+    apiKey = key;
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de l\'enregistrement de la clé API:', error);
+    return false;
+  }
+};
+
+// Récupérer la clé API Google Cloud
+export const getGoogleCloudApiKey = () => apiKey;
+
+// Initialiser le chargement de la clé au démarrage
+loadApiKey().catch(error => {
+  console.error('Erreur lors de l\'initialisation de la clé API:', error);
+});
