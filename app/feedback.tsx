@@ -9,7 +9,6 @@ import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Linking,
   Platform,
@@ -268,18 +267,8 @@ export default function FeedbackScreen() {
       ]}>
         <StandardHeader
           title="Feedback & Paramètres"
-          showBackButton={true}
-          rightIcon="image"
-          onRightIconPress={() => {}}
-          rightIconColor={colors.primary}
         />
-        <View style={{ position: 'absolute', top: insets.top + 12, right: 16, zIndex: 10 }}>
-          <Image
-            source={require('../assets/images/talk-logo2.png')}
-            style={styles.logoSmall}
-            resizeMode="contain"
-          />
-        </View>
+
         
         <View style={styles.tabContainer}>
           <TouchableOpacity 
