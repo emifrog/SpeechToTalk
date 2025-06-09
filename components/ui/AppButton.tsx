@@ -11,6 +11,7 @@ import {
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Colors } from '@/constants/Colors';
 import { Theme } from '@/constants/Theme';
+import { soundFeedback, SoundType } from '@/services/soundFeedbackService';
 
 interface AppButtonProps {
   title: string;
@@ -152,7 +153,10 @@ export function AppButton({
         fullWidth && styles.fullWidth,
         style,
       ]}
-      onPress={onPress}
+      onPress={() => {
+        soundFeedback.playSound(SoundType.BUTTON_PRESS);
+        onPress();
+      }}
       disabled={disabled || loading}
       activeOpacity={0.8}
     >

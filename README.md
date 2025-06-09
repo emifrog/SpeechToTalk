@@ -150,6 +150,10 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une issue ou à
 
 Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
+## Améliorations futures
+
+- Un mode **conversation** où chaque utilisateur peut parler à tour de rôle, avec détection automatique de la langue source.
+
 ## Améliorations récentes
 
 ### Version 2.2.0 (Mai 2025)

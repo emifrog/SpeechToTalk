@@ -8,6 +8,7 @@ export enum SoundType {
   STOP_LISTENING = 'stopListening',
   TRANSLATION_COMPLETE = 'translationComplete',
   BUTTON_PRESS = 'buttonPress',
+  NOTIFICATION = 'notification',
 }
 
 // Configuration des sons
@@ -75,6 +76,19 @@ class SoundFeedbackService {
       type: 'sine',
       frequency: 600,
       volume: 0.3
+    },
+    [SoundType.NOTIFICATION]: {
+      durationMs: 350,
+      type: 'sine',
+      frequency: 700, // Fa# (F#5)
+      volume: 0.45,
+      pattern: [
+        { durationMs: 100, isSound: true },
+        { durationMs: 50, isSound: false },
+        { durationMs: 100, isSound: true },
+        { durationMs: 50, isSound: false },
+        { durationMs: 100, isSound: true }
+      ]
     },
   };
 
@@ -174,6 +188,11 @@ class SoundFeedbackService {
   // Jouer un son d'erreur générique
   async playError() {
     await this.playSound(SoundType.ERROR);
+  }
+
+  // Jouer un son de notification
+  async playNotification() {
+    await this.playSound(SoundType.NOTIFICATION);
   }
 }
 
