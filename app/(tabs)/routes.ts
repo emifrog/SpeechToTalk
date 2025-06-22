@@ -3,4 +3,4 @@
  * Seules les routes listées ici seront visibles dans la TabBar
  */
 
-export const routes = ['index', 'explore', 'media'];
+export const routes = ['index', 'explore', 'media', 'conversation'];

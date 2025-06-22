@@ -1,4 +1,4 @@
-import { GOOGLE_CLOUD_API_KEY } from '../config';
+import { getGoogleCloudApiKey } from '../config';
 import NetInfo from '@react-native-community/netinfo';
 import { LANGUAGES } from './translationService';
 
@@ -12,6 +12,7 @@ export interface LanguageDetectionResult {
   detectedLanguage: string;
   confidence: number;
   isReliable: boolean;
+  detectedText?: string; // Texte détecté lors de la reconnaissance vocale
 }
 
 /**
@@ -28,7 +29,7 @@ export const detectLanguageFromAudio = async (audioBase64: string): Promise<Lang
     }
 
     // Préparer la requête pour l'API Google Cloud Speech-to-Text
-    const apiUrl = `https://speech.googleapis.com/v1/speech:recognize?key=${GOOGLE_CLOUD_API_KEY}`;
+    const apiUrl = `https://speech.googleapis.com/v1/speech:recognize?key=${getGoogleCloudApiKey()}`;
     
     // Configurer la requête pour détecter la langue
     const requestBody = {
@@ -70,13 +71,18 @@ export const detectLanguageFromAudio = async (audioBase64: string): Promise<Lang
       // Récupérer le code de langue (format: 'fr-FR' -> 'fr')
       const detectedLangCode = data.results[0].languageCode.split('-')[0].toLowerCase();
       
+      // Récupérer le texte transcrit
+      const detectedText = data.results[0].alternatives && data.results[0].alternatives[0] ? 
+        data.results[0].alternatives[0].transcript : undefined;
+      
       // Vérifier si la langue détectée est supportée par notre application
       const isSupported = LANGUAGES.some(lang => lang.code === detectedLangCode);
       
       return {
         detectedLanguage: isSupported ? detectedLangCode : 'fr', // Par défaut 'fr' si non supportée
         confidence: data.results[0].languageDetectionConfidence || 0.5,
-        isReliable: (data.results[0].languageDetectionConfidence || 0) > 0.7
+        isReliable: (data.results[0].languageDetectionConfidence || 0) > 0.7,
+        detectedText
       };
     }
     
@@ -112,7 +118,7 @@ export const detectLanguageFromText = async (text: string): Promise<LanguageDete
     }
 
     // Préparer la requête pour l'API Google Cloud Translation
-    const apiUrl = `https://translation.googleapis.com/language/translate/v2/detect?key=${GOOGLE_CLOUD_API_KEY}`;
+    const apiUrl = `https://translation.googleapis.com/language/translate/v2/detect?key=${getGoogleCloudApiKey()}`;
     
     // Configurer la requête
     const requestBody = {
@@ -149,7 +155,8 @@ export const detectLanguageFromText = async (text: string): Promise<LanguageDete
       return {
         detectedLanguage: isSupported ? detectedLangCode : 'fr', // Par défaut 'fr' si non supportée
         confidence: detection.confidence || 0.5,
-        isReliable: (detection.confidence || 0) > 0.7 && detection.isReliable
+        isReliable: (detection.confidence || 0) > 0.7 && detection.isReliable,
+        detectedText: text
       };
     }
     

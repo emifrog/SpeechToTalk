@@ -50,12 +50,16 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      ["expo-image-picker", {
-        "photosPermission": "The app needs access to your photos to let you share them and analyze them.",
-        "cameraPermission": "The app needs access to your camera to let you take photos."
-      }],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "The app needs access to your photos to let you share them and analyze them.",
+          "cameraPermission": "The app needs access to your camera to let you take photos."
+        }
+      ],
       "expo-document-picker",
-      "expo-file-system"
+      "expo-file-system",
+      "expo-web-browser"
     ],
     "experiments": {
       "typedRoutes": true

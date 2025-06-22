@@ -1,7 +1,7 @@
 import { Colors } from '@/constants/Colors';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Platform, StyleSheet, useColorScheme, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -74,6 +74,19 @@ export default function TabLayout() {
             tabBarIcon: ({ color }) => (
               <View style={styles.tabIconContainer}>
                 <MaterialCommunityIcons name="translate" size={28} color={color} />
+              </View>
+            ),
+          }}
+        />
+      )}
+      {routes.includes('conversation') && (
+        <Tabs.Screen
+          name="conversation"
+          options={{
+            title: 'Conversation',
+            tabBarIcon: ({ color }) => (
+              <View style={styles.tabIconContainer}>
+                <MaterialCommunityIcons name="comment-processing-outline" size={28} color={color} />
               </View>
             ),
           }}

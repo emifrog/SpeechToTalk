@@ -12,6 +12,7 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel con�
 
 - **Traduction vocale en temps réel** : Parlez dans votre langue et obtenez une traduction instantanée
 - **Détection automatique de langue** : Identification automatique de la langue parlée pour une communication plus rapide en situation d'urgence
+- **Mode conversation multilingue** : Permet à plusieurs utilisateurs de parler à tour de rôle dans leur langue préférée avec détection automatique
 - **Interface utilisateur intuitive** : Design moderne et cohérent avec des composants réutilisables
 - **Phrases d'urgence prédéfinies** : Accès rapide à des phrases essentielles pour les situations d'urgence médicales
 - **Traduction de médias** : Possibilité de traduire du texte à partir d'images et de documents
@@ -79,7 +80,7 @@ SpeechToTalk est une application mobile de traduction vocale en temps réel con�
 ## Structure du projet
 
 - **/app** : Code source principal de l'application
-  - **/app/(tabs)** : Écrans principaux de l'application (Traducteur, Phrases, Documents)
+  - **/app/(tabs)** : Écrans principaux de l'application (Traducteur, Conversation, Phrases, Documents)
   - **/app/feedback.tsx** : Écran de feedback et paramètres
 - **/components** : Composants réutilisables
   - **/components/ui** : Composants UI réutilisables (AppButton, AppCard, AppHeader)
@@ -138,9 +139,10 @@ Les APIs Google Cloud sont soumises à des quotas. Pour éviter de dépasser ces
   <img src="assets/screenshots/1.png" alt="Écran principal de traduction" width="280" />
   <img src="assets/screenshots/2.png" alt="Sélection des langues et détection automatique" width="280" />
   <img src="assets/screenshots/3.png" alt="Traduction de médias" width="280" />
+  <img src="assets/screenshots/4.png" alt="Mode conversation multilingue" width="280" />
 </div>
 
-*De gauche à droite: Écran principal de traduction, Sélection des langues avec détection automatique, Traduction de médias*
+*De gauche à droite: Écran principal de traduction, Sélection des langues avec détection automatique, Traduction de médias, Mode conversation multilingue*
 
 ## Contribution
 
@@ -152,9 +154,20 @@ Ce projet est sous licence MIT. Voir le fichier LICENSE pour plus de détails.
 
 ## Améliorations futures
 
-- Un mode **conversation** où chaque utilisateur peut parler à tour de rôle, avec détection automatique de la langue source.
+- Amélioration du mode conversation avec support pour les appels vidéo
+- Intégration d'un système de reconnaissance des gestes pour faciliter la communication non-verbale
+- Développement d'une API de traduction locale pour une utilisation complètement hors-ligne
 
 ## Améliorations récentes
+
+### Version 2.3.0 (Juin 2025)
+
+- **Mode conversation multilingue** : Implémentation d'un système permettant à plusieurs utilisateurs de parler à tour de rôle dans leur langue préférée
+- **Nouvel onglet dédié** : Ajout d'un onglet "Conversation" dans la barre de navigation pour accéder directement au mode conversation
+- **Gestion des participants** : Interface intuitive pour ajouter/supprimer des participants et définir leur langue préférée
+- **Détection automatique par participant** : Chaque participant peut bénéficier de la détection automatique de sa langue
+- **Historique des tours de parole** : Enregistrement et affichage des interventions précédentes pour suivre la conversation
+- **Corrections de bugs** : Résolution des problèmes de duplication de méthodes et configuration JSX/TSX
 
 ### Version 2.2.0 (Mai 2025)
 
