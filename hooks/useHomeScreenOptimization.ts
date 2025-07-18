@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef } from 'react';
 import { useColorScheme } from 'react-native';
 import { Colors } from '@/constants/Colors';
 import { useDebouncedCallback } from './usePerformanceOptimization';
@@ -178,38 +178,38 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
     container: {
       flex: 1,
       backgroundColor: colors.background,
-      padding: 16,
+      padding: 20, // Augmenté de 16 à 20
     },
     scrollContainer: {
       flexGrow: 1,
-      padding: 16,
+      padding: 20, // Augmenté de 16 à 20
     },
     sectionHeader: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
-      marginVertical: 16,
+      marginVertical: 24, // Augmenté de 16 à 24
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: '600' as const,
-      marginLeft: 8,
+      fontSize: 20, // Augmenté de 18 à 20
+      fontWeight: '700' as const, // Augmenté de 600 à 700
+      marginLeft: 12, // Augmenté de 8 à 12
       color: colors.primary,
     },
     languageSelectors: {
-      marginVertical: 10,
-      marginHorizontal: 16,
+      marginVertical: 16, // Augmenté de 10 à 16
+      marginHorizontal: 20, // Augmenté de 16 à 20
     },
     languageCard: {
       flex: 1,
       backgroundColor: colorScheme === 'dark' ? '#1f2937' : '#ffffff',
-      borderRadius: 12,
-      padding: 16,
-      marginHorizontal: 4,
+      borderRadius: 16, // Augmenté de 12 à 16
+      padding: 20, // Augmenté de 16 à 20
+      marginHorizontal: 8, // Augmenté de 4 à 8
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 4,
-      elevation: 3,
+      shadowOffset: { width: 0, height: 3 }, // Augmenté de 2 à 3
+      shadowOpacity: 0.15, // Augmenté de 0.1 à 0.15
+      shadowRadius: 6, // Augmenté de 4 à 6
+      elevation: 5, // Augmenté de 3 à 5
     },
     languageSelector: {
       flex: 1,
@@ -227,7 +227,7 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
       backgroundColor: colors.background,
     },
     picker: {
-      height: 50,
+      height: 52, // Augmenté de 50 à 52 pour meilleure accessibilité tactile
       width: '100%',
     },
     autoDetectButton: {
@@ -253,17 +253,17 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
     },
     swapButton: {
       backgroundColor: colors.primary,
-      width: 44,
-      height: 44,
-      borderRadius: 22,
+      width: 48, // Augmenté de 44 à 48 pour meilleure accessibilité tactile
+      height: 48, // Augmenté de 44 à 48
+      borderRadius: 24, // Ajusté en conséquence
       justifyContent: 'center' as const,
       alignItems: 'center' as const,
-      marginHorizontal: 8,
+      marginHorizontal: 12, // Augmenté de 8 à 12
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.2,
-      shadowRadius: 4,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 3 }, // Augmenté de 2 à 3
+      shadowOpacity: 0.25, // Augmenté de 0.2 à 0.25
+      shadowRadius: 6, // Augmenté de 4 à 6
+      elevation: 6, // Augmenté de 4 à 6
     },
     downloadButton: {
       backgroundColor: colors.secondary,
@@ -274,18 +274,19 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
       alignItems: 'center' as const,
     },
     phrasesContainer: {
-      marginBottom: 20,
+      marginBottom: 32, // Augmenté de 20 à 32 pour meilleure séparation
     },
     phraseButton: {
       flexDirection: 'row' as const,
       alignItems: 'center' as const,
       backgroundColor: colorScheme === 'dark' ? '#1f2937' : '#ffffff',
-      paddingHorizontal: 12,
-      paddingVertical: 8,
-      borderRadius: 8,
-      marginRight: 8,
+      paddingHorizontal: 16, // Augmenté de 12 à 16
+      paddingVertical: 12, // Augmenté de 8 à 12 pour meilleure accessibilité tactile
+      borderRadius: 12, // Augmenté de 8 à 12
+      marginRight: 12, // Augmenté de 8 à 12
       borderWidth: 1,
       borderColor: colors.border,
+      minHeight: 44, // Ajouté pour garantir la taille tactile minimale
     },
     phraseIcon: {
       marginRight: 6,
@@ -298,14 +299,14 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
     chatContainer: {
       flex: 1,
       backgroundColor: colorScheme === 'dark' ? '#1f2937' : '#ffffff',
-      borderRadius: 16,
-      padding: 16,
-      marginBottom: 20,
+      borderRadius: 20, // Augmenté de 16 à 20
+      padding: 24, // Augmenté de 16 à 24
+      marginBottom: 32, // Augmenté de 20 à 32
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 2 },
-      shadowOpacity: 0.1,
-      shadowRadius: 8,
-      elevation: 4,
+      shadowOffset: { width: 0, height: 4 }, // Augmenté de 2 à 4
+      shadowOpacity: 0.15, // Augmenté de 0.1 à 0.15
+      shadowRadius: 12, // Augmenté de 8 à 12
+      elevation: 6, // Augmenté de 4 à 6
     },
     conversationContainer: {
       flex: 1,
@@ -344,9 +345,9 @@ export const useOptimizedHomeScreenStyles = (colorScheme: 'light' | 'dark' | nul
     },
     micButton: {
       backgroundColor: colors.primary,
-      width: 60,
-      height: 60,
-      borderRadius: 30,
+      width: 64, // Augmenté de 60 à 64 pour meilleure accessibilité tactile
+      height: 64, // Augmenté de 60 à 64
+      borderRadius: 32, // Ajusté en conséquence
       justifyContent: 'center' as const,
       alignItems: 'center' as const,
       shadowColor: '#000',

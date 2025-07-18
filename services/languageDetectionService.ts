@@ -1,5 +1,5 @@
-import { getGoogleCloudApiKey } from '../config';
 import NetInfo from '@react-native-community/netinfo';
+import { getGoogleCloudApiKey } from '../config';
 import { LANGUAGES } from './translationService';
 
 /**

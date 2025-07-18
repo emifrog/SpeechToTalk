@@ -3,6 +3,7 @@ import { StandardHeader } from '@/components/ui/AppHeader';
 import { Colors } from '@/constants/Colors';
 import { ConversationParticipant, ConversationTurn, conversationModeService } from '@/services/conversationModeService';
 import { LANGUAGES } from '@/services/translationService';
+import { useImprovedUIStyles } from '@/hooks/useImprovedUIStyles';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { Picker } from '@react-native-picker/picker';
 import { useEffect, useState } from 'react';
@@ -14,6 +15,7 @@ import { ScrollView, StyleSheet, Text, TouchableOpacity, View, useColorScheme } 
 export default function ConversationScreen() {
   const colorScheme = useColorScheme();
   const colors = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
+  const improvedStyles = useImprovedUIStyles();
   
   const [isActive, setIsActive] = useState(false);
   const [participants, setParticipants] = useState<ConversationParticipant[]>([]);

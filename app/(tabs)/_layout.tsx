@@ -118,6 +118,17 @@ export default function TabLayout() {
           }}
         />
       )}
+      <Tabs.Screen
+        name="settings"
+        options={{
+          title: 'Paramètres',
+          tabBarIcon: ({ color }) => (
+            <View style={styles.tabIconContainer}>
+              <MaterialCommunityIcons name="cog" size={28} color={color} />
+            </View>
+          ),
+        }}
+      />
     </Tabs>
     </SafeAreaProvider>
   );
