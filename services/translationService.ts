@@ -1,3 +1,19 @@
+/**
+ * @fileoverview Service de traduction pour l'application SpeechToTalk
+ *
+ * Ce service gère toutes les opérations de traduction de texte en utilisant
+ * l'API Google Cloud Translation. Il inclut également un système de cache
+ * intelligent avec compression pour optimiser les performances et réduire
+ * les appels API.
+ *
+ * @module services/translationService
+ * @requires @react-native-async-storage/async-storage
+ * @requires @react-native-community/netinfo
+ * @requires ./compressionService
+ * @requires ./types
+ * @requires ../config
+ */
+
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import NetInfo from '@react-native-community/netinfo';
 import {
@@ -7,8 +23,31 @@ import {
   optimizeTranslationStorage
 } from './compressionService';
 import { TranslationCache } from './types';
+import { getGoogleCloudApiKey } from '../config';
 
-// Fonction de traduction
+/**
+ * Traduit un texte d'une langue source vers une langue cible
+ *
+ * Cette fonction vérifie d'abord le cache local, puis les traductions prédéfinies,
+ * et enfin appelle l'API Google Cloud Translation si nécessaire.
+ *
+ * @async
+ * @function translateText
+ * @param {string} text - Le texte à traduire
+ * @param {string} sourceLang - Code de la langue source (ex: 'fr', 'en')
+ * @param {string} targetLang - Code de la langue cible (ex: 'en', 'es')
+ * @param {boolean} [isEmergencyPhrase=false] - Indique si c'est une phrase d'urgence (priorité dans le cache)
+ * @returns {Promise<string>} Le texte traduit
+ * @throws {Error} En cas d'erreur de traduction, retourne un message d'erreur formaté
+ *
+ * @example
+ * const translation = await translateText('Bonjour', 'fr', 'en');
+ * console.log(translation); // "Hello"
+ *
+ * @example
+ * // Traduction d'une phrase d'urgence (sera conservée plus longtemps dans le cache)
+ * const emergency = await translateText('Où avez-vous mal ?', 'fr', 'en', true);
+ */
 export const translateText = async (
   text: string,
   sourceLang: string,
@@ -50,10 +89,13 @@ export const translateText = async (
     // Utiliser une véritable API de traduction
     let translation = '';
     try {
-      // Utiliser l'API Google Cloud Translation
-      // Note: Dans une vraie application, vous devriez utiliser votre propre clé API
-      // et la stocker de manière sécurisée
-      const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=AIzaSyDzBUV4Ogznth5CfowZB7_esRM0yYbRECE`;
+      // Utiliser l'API Google Cloud Translation avec la clé sécurisée
+      const apiKey = getGoogleCloudApiKey();
+      if (!apiKey) {
+        console.warn('Clé API non configurée, utilisation du mode démo');
+        return `[${targetLang}] ${text}`;
+      }
+      const apiUrl = `https://translation.googleapis.com/language/translate/v2?key=${apiKey}`;
       
       const response = await fetch(apiUrl, {
         method: 'POST',
@@ -96,11 +138,15 @@ export const translateText = async (
   }
 };
 
-// API Google Cloud Translation
-// La clÃ© API est stockÃ©e de maniÃ¨re sÃ©curisÃ©e dans ../config/keys.ts
-// et ce fichier est ajoutÃ© au .gitignore pour Ã©viter de partager la clÃ©
-
-// Dictionnaire de traductions prÃ©dÃ©finies pour la dÃ©monstration
+/**
+ * Dictionnaire de traductions prédéfinies pour les phrases courantes
+ *
+ * Ces traductions sont utilisées en priorité pour éviter les appels API
+ * et garantir des traductions de qualité pour les phrases d'urgence.
+ *
+ * @constant {Record<string, Record<string, string>>}
+ * @private
+ */
 const DEMO_TRANSLATIONS: Record<string, Record<string, string>> = {
   'fr': {
     'en': 'English',
@@ -131,7 +177,15 @@ const DEMO_TRANSLATIONS: Record<string, Record<string, string>> = {
   }
 };
 
-// Liste des phrases d'urgence pour les pompiers
+/**
+ * Liste des phrases d'urgence prédéfinies pour les sapeurs-pompiers
+ *
+ * Ces phrases sont les plus fréquemment utilisées lors des interventions
+ * et sont prioritaires dans le système de cache.
+ *
+ * @constant {Array<{fr: string, translations: object}>}
+ * @exports EMERGENCY_PHRASES
+ */
 export const EMERGENCY_PHRASES = [
   { fr: "OÃ¹ avez-vous mal ?", translations: {} },
   { fr: "Avez-vous des difficultÃ©s Ã  respirer ?", translations: {} },
@@ -141,9 +195,17 @@ export const EMERGENCY_PHRASES = [
   { fr: "Restez calme, les secours sont lÃ .", translations: {} },
 ];
 
-// Les interfaces TranslationCacheEntry et TranslationCache ont Ã©tÃ© dÃ©placÃ©es dans le fichier types.ts
-
-// Configuration du cache
+/**
+ * Configuration du système de cache de traduction
+ *
+ * @constant {Object} CACHE_CONFIG
+ * @property {number} DEFAULT_SIZE_LIMIT - Nombre maximum d'entrées dans le cache (défaut: 500)
+ * @property {number} CLEANUP_INTERVAL - Intervalle de nettoyage automatique en ms (24h)
+ * @property {number} CACHE_VERSION - Version du format de cache pour les migrations
+ * @property {number} EMERGENCY_PHRASE_RETENTION - Durée de rétention des phrases d'urgence en jours
+ * @property {number} NORMAL_PHRASE_RETENTION - Durée de rétention des phrases normales en jours
+ * @private
+ */
 const CACHE_CONFIG = {
   DEFAULT_SIZE_LIMIT: 500,     // Nombre maximum d'entrÃ©es par dÃ©faut
   CLEANUP_INTERVAL: 86400000,  // Intervalle de nettoyage (24 heures en ms)
@@ -152,10 +214,27 @@ const CACHE_CONFIG = {
   NORMAL_PHRASE_RETENTION: 7,  // Nombre de jours de rÃ©tention pour les phrases normales
 };
 
-// ClÃ© pour stocker le cache dans AsyncStorage
+/**
+ * Clé de stockage pour le cache de traduction dans AsyncStorage
+ * @constant {string}
+ * @private
+ */
 const TRANSLATION_CACHE_KEY = 'translationCache_v1';
 
-// Initialiser ou rÃ©cupÃ©rer le cache de traduction
+/**
+ * Récupère le cache de traduction depuis AsyncStorage
+ *
+ * Initialise un nouveau cache si aucun n'existe. Décompresse automatiquement
+ * les données et déclenche le nettoyage si nécessaire.
+ *
+ * @async
+ * @function getTranslationCache
+ * @returns {Promise<TranslationCache>} Le cache de traduction (existant ou nouveau)
+ *
+ * @example
+ * const cache = await getTranslationCache();
+ * console.log(`${cache.entries.length} traductions en cache`);
+ */
 export const getTranslationCache = async (): Promise<TranslationCache> => {
   try {
     const cacheJson = await AsyncStorage.getItem(TRANSLATION_CACHE_KEY);
@@ -192,7 +271,18 @@ export const getTranslationCache = async (): Promise<TranslationCache> => {
   }
 };
 
-// Sauvegarder le cache de traduction
+/**
+ * Sauvegarde le cache de traduction dans AsyncStorage
+ *
+ * Compresse automatiquement les données avant la sauvegarde et déclenche
+ * une optimisation périodique du stockage.
+ *
+ * @async
+ * @function saveTranslationCache
+ * @param {TranslationCache} cache - Le cache à sauvegarder
+ * @returns {Promise<void>}
+ * @private
+ */
 const saveTranslationCache = async (cache: TranslationCache): Promise<void> => {
   try {
     // Compresser le cache avant de le sauvegarder
@@ -215,7 +305,19 @@ const saveTranslationCache = async (cache: TranslationCache): Promise<void> => {
   }
 };
 
-// Nettoyer le cache en supprimant les entrÃ©es expirÃ©es ou moins utilisÃ©es
+/**
+ * Nettoie le cache en supprimant les entrées expirées ou moins utilisées
+ *
+ * Les phrases d'urgence sont conservées plus longtemps que les phrases normales.
+ * Si le cache dépasse la limite après le nettoyage des entrées expirées,
+ * les entrées les moins utiles sont supprimées.
+ *
+ * @async
+ * @function cleanupCache
+ * @param {TranslationCache} cache - Le cache à nettoyer
+ * @returns {Promise<TranslationCache>} Le cache nettoyé
+ * @private
+ */
 const cleanupCache = async (cache: TranslationCache): Promise<TranslationCache> => {
   const now = Date.now();
   
@@ -262,7 +364,22 @@ const cleanupCache = async (cache: TranslationCache): Promise<TranslationCache> 
   return updatedCache;
 };
 
-// Stocker une traduction dans le cache
+/**
+ * Stocke une traduction dans le cache
+ *
+ * Met à jour une entrée existante ou en crée une nouvelle.
+ * Déclenche le nettoyage si la limite de taille est atteinte.
+ *
+ * @async
+ * @function storeTranslationInCache
+ * @param {string} text - Le texte original
+ * @param {string} translatedText - La traduction
+ * @param {string} sourceLang - Code de la langue source
+ * @param {string} targetLang - Code de la langue cible
+ * @param {boolean} [isEmergencyPhrase=false] - Indique si c'est une phrase d'urgence
+ * @returns {Promise<void>}
+ * @private
+ */
 const storeTranslationInCache = async (
   text: string,
   translatedText: string,
@@ -319,7 +436,25 @@ const storeTranslationInCache = async (
   }
 };
 
-// RÃ©cupÃ©rer une traduction du cache
+/**
+ * Récupère une traduction depuis le cache
+ *
+ * Recherche une correspondance exacte (texte + langues source/cible).
+ * Met à jour les statistiques d'utilisation si trouvée.
+ *
+ * @async
+ * @function getTranslationFromCache
+ * @param {string} text - Le texte original à rechercher
+ * @param {string} sourceLang - Code de la langue source
+ * @param {string} targetLang - Code de la langue cible
+ * @returns {Promise<string|null>} La traduction trouvée ou null
+ *
+ * @example
+ * const cached = await getTranslationFromCache('Hello', 'en', 'fr');
+ * if (cached) {
+ *   console.log('Traduction en cache:', cached);
+ * }
+ */
 export const getTranslationFromCache = async (
   text: string,
   sourceLang: string,
@@ -355,7 +490,14 @@ export const getTranslationFromCache = async (
   }
 };
 
-// Liste des langues supportÃ©es
+/**
+ * Liste des langues supportées par l'application
+ *
+ * Chaque langue est définie par son code ISO 639-1 et son nom en français.
+ *
+ * @constant {Array<{code: string, name: string}>}
+ * @exports LANGUAGES
+ */
 export const LANGUAGES = [
   { code: 'fr', name: 'Français' },
   { code: 'en', name: 'Anglais' },
@@ -378,7 +520,23 @@ export const LANGUAGES = [
   { code: 'el', name: 'Grec' }
 ];
 
-// TÃ©lÃ©charger une langue pour une utilisation hors ligne
+/**
+ * Télécharge une langue pour une utilisation hors ligne
+ *
+ * Marque la langue comme téléchargée dans le stockage local.
+ * Nécessite une connexion internet.
+ *
+ * @async
+ * @function downloadLanguage
+ * @param {string} languageCode - Code ISO 639-1 de la langue (ex: 'fr', 'en')
+ * @returns {Promise<boolean>} true si le téléchargement a réussi, false sinon
+ *
+ * @example
+ * const success = await downloadLanguage('es');
+ * if (success) {
+ *   console.log('Espagnol téléchargé avec succès');
+ * }
+ */
 export const downloadLanguage = async (languageCode: string): Promise<boolean> => {
   try {
     // VÃ©rifier la connexion internet
@@ -414,7 +572,27 @@ export const downloadLanguage = async (languageCode: string): Promise<boolean> =
   }
 };
 
-// Obtenir des statistiques sur le cache de traduction
+/**
+ * Obtient des statistiques détaillées sur le cache de traduction
+ *
+ * Retourne des informations sur le nombre d'entrées, la répartition par langue,
+ * la taille du cache et le ratio de compression.
+ *
+ * @async
+ * @function getTranslationCacheStats
+ * @returns {Promise<Object>} Statistiques du cache
+ * @property {number} totalEntries - Nombre total d'entrées
+ * @property {Record<string, number>} languageStats - Nombre de traductions par paire de langues
+ * @property {number} emergencyPhraseCount - Nombre de phrases d'urgence
+ * @property {number} cacheSize - Taille non compressée en octets
+ * @property {number} compressedSize - Taille compressée en octets
+ * @property {number} compressionRatio - Ratio de compression
+ * @property {Date} lastCleanup - Date du dernier nettoyage
+ *
+ * @example
+ * const stats = await getTranslationCacheStats();
+ * console.log(`Cache: ${stats.totalEntries} entrées, ratio: ${stats.compressionRatio.toFixed(2)}x`);
+ */
 export const getTranslationCacheStats = async (): Promise<{
   totalEntries: number;
   languageStats: Record<string, number>;
@@ -470,7 +648,25 @@ export const getTranslationCacheStats = async (): Promise<{
   }
 };
 
-// Fonction pour forcer l'optimisation du stockage des traductions
+/**
+ * Force l'optimisation du stockage des traductions
+ *
+ * Compresse toutes les données du cache et retourne les statistiques
+ * de compression.
+ *
+ * @async
+ * @function forceStorageOptimization
+ * @returns {Promise<Object>} Résultat de l'optimisation
+ * @property {boolean} success - Indique si l'optimisation a réussi
+ * @property {number} compressionRatio - Ratio de compression obtenu
+ * @property {number} savedBytes - Nombre d'octets économisés
+ *
+ * @example
+ * const result = await forceStorageOptimization();
+ * if (result.success) {
+ *   console.log(`Économisé ${result.savedBytes} octets`);
+ * }
+ */
 export const forceStorageOptimization = async (): Promise<{
   success: boolean;
   compressionRatio: number;
@@ -507,7 +703,22 @@ export const forceStorageOptimization = async (): Promise<{
 };
 
 
-// Fonction pour effacer complètement le cache de traduction
+/**
+ * Efface complètement le cache de traduction
+ *
+ * Crée un nouveau cache vide et le sauvegarde dans AsyncStorage.
+ * Cette action est irréversible.
+ *
+ * @async
+ * @function clearTranslationCache
+ * @returns {Promise<boolean>} true si le cache a été effacé avec succès
+ *
+ * @example
+ * const cleared = await clearTranslationCache();
+ * if (cleared) {
+ *   console.log('Cache effacé avec succès');
+ * }
+ */
 export const clearTranslationCache = async (): Promise<boolean> => {
   try {
     // Créer un nouveau cache vide
@@ -528,7 +739,21 @@ export const clearTranslationCache = async (): Promise<boolean> => {
   }
 };
 
-// Fonction pour définir la limite de taille du cache de traduction
+/**
+ * Définit la limite de taille du cache de traduction
+ *
+ * Si la nouvelle limite est inférieure au nombre d'entrées actuel,
+ * les entrées les plus anciennes sont supprimées.
+ *
+ * @async
+ * @function setTranslationCacheLimit
+ * @param {number} limit - Nouvelle limite (doit être positive)
+ * @returns {Promise<boolean>} true si la limite a été définie avec succès
+ * @throws {Error} Si la limite est négative
+ *
+ * @example
+ * await setTranslationCacheLimit(1000);
+ */
 export const setTranslationCacheLimit = async (limit: number): Promise<boolean> => {
   try {
     if (limit < 0) {

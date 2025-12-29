@@ -1,6 +1,31 @@
+/**
+ * @fileoverview Service de feedback sonore pour l'application SpeechToTalk
+ *
+ * Ce service gère la lecture de sons de feedback pour améliorer l'expérience
+ * utilisateur lors des différentes actions de l'application (succès, erreur,
+ * début/fin d'écoute, etc.).
+ *
+ * @module services/soundFeedbackService
+ * @requires expo-av
+ */
+
 import { Audio } from 'expo-av';
 
-// Types pour notre service de feedback sonore
+/**
+ * Types de sons disponibles dans l'application
+ *
+ * Chaque type correspond à une action spécifique et a une configuration
+ * sonore distincte (fréquence, durée, pattern).
+ *
+ * @enum {string} SoundType
+ * @property {string} SUCCESS - Son de confirmation/succès
+ * @property {string} ERROR - Son d'erreur
+ * @property {string} START_LISTENING - Son de début d'écoute vocale
+ * @property {string} STOP_LISTENING - Son de fin d'écoute vocale
+ * @property {string} TRANSLATION_COMPLETE - Son de traduction terminée
+ * @property {string} BUTTON_PRESS - Son de pression de bouton
+ * @property {string} NOTIFICATION - Son de notification
+ */
 export enum SoundType {
   SUCCESS = 'success',
   ERROR = 'error',
@@ -11,7 +36,16 @@ export enum SoundType {
   NOTIFICATION = 'notification',
 }
 
-// Configuration des sons
+/**
+ * Configuration d'un son individuel
+ *
+ * @interface SoundConfig
+ * @property {number} durationMs - Durée totale du son en millisecondes
+ * @property {'sine'|'triangle'|'sawtooth'|'square'} type - Type d'onde sonore
+ * @property {number} frequency - Fréquence du son en Hz
+ * @property {number} volume - Volume du son (0.0 à 1.0)
+ * @property {Array<{durationMs: number, isSound: boolean}>} [pattern] - Pattern optionnel pour les sons complexes
+ */
 interface SoundConfig {
   durationMs: number;
   type: 'sine' | 'triangle' | 'sawtooth' | 'square';
@@ -20,7 +54,24 @@ interface SoundConfig {
   pattern?: { durationMs: number; isSound: boolean }[]; // Pour les sons avec motif (comme les bips)
 }
 
-// Classe pour gérer les sons
+/**
+ * Service singleton pour gérer les retours sonores de l'application
+ *
+ * Cette classe fournit des méthodes pour jouer différents types de sons
+ * en réponse aux actions utilisateur. Elle gère également le mode muet
+ * et l'initialisation du système audio.
+ *
+ * @class SoundFeedbackService
+ * @example
+ * // Jouer un son de succès
+ * await soundFeedback.playSound(SoundType.SUCCESS);
+ *
+ * // Jouer un son de confirmation
+ * await soundFeedback.playConfirmation();
+ *
+ * // Désactiver les sons
+ * soundFeedback.setMuted(true);
+ */
 class SoundFeedbackService {
   private isMuted = false;
   
@@ -110,7 +161,17 @@ class SoundFeedbackService {
     }
   }
 
-  // Jouer un son spécifique
+  /**
+   * Joue un son spécifique selon son type
+   *
+   * @async
+   * @method playSound
+   * @param {SoundType} type - Le type de son à jouer
+   * @returns {Promise<void>}
+   *
+   * @example
+   * await soundFeedback.playSound(SoundType.SUCCESS);
+   */
   async playSound(type: SoundType) {
     try {
       if (this.isMuted) return;
@@ -159,7 +220,17 @@ class SoundFeedbackService {
     }
   }
 
-  // Générer un URI pour un ton audio
+  /**
+   * Génère un URI de données pour un ton audio
+   *
+   * @private
+   * @method generateToneUri
+   * @param {number} frequency - Fréquence du ton en Hz
+   * @param {number} durationMs - Durée du ton en millisecondes
+   * @param {string} type - Type d'onde (sine, triangle, etc.)
+   * @param {number} volume - Volume du son (0.0 à 1.0)
+   * @returns {string} URI de données audio en Base64
+   */
   private generateToneUri(frequency: number, durationMs: number, type: string, volume: number): string {
     // Comme nous ne pouvons pas générer de vrais fichiers audio ici, nous allons simuler un URI
     // Dans une implémentation réelle, nous utiliserions une bibliothèque comme tone.js ou web-audio-api
@@ -170,31 +241,76 @@ class SoundFeedbackService {
     return `data:audio/wav;base64,UklGRisAAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQcAAACAgICAgICA`;
   }
 
-  // Activer/désactiver tous les sons
+  /**
+   * Active ou désactive tous les sons de l'application
+   *
+   * @method setMuted
+   * @param {boolean} muted - true pour désactiver les sons, false pour les activer
+   *
+   * @example
+   * soundFeedback.setMuted(true); // Désactive tous les sons
+   */
   setMuted(muted: boolean) {
     this.isMuted = muted;
   }
 
-  // Vérifier si les sons sont activés
+  /**
+   * Vérifie si les sons sont actuellement activés
+   *
+   * @method isSoundEnabled
+   * @returns {boolean} true si les sons sont activés, false sinon
+   */
   isSoundEnabled(): boolean {
     return !this.isMuted;
   }
 
-  // Jouer un son de confirmation générique
+  /**
+   * Joue un son de confirmation générique (raccourci pour SUCCESS)
+   *
+   * @async
+   * @method playConfirmation
+   * @returns {Promise<void>}
+   */
   async playConfirmation() {
     await this.playSound(SoundType.SUCCESS);
   }
 
-  // Jouer un son d'erreur générique
+  /**
+   * Joue un son d'erreur générique (raccourci pour ERROR)
+   *
+   * @async
+   * @method playError
+   * @returns {Promise<void>}
+   */
   async playError() {
     await this.playSound(SoundType.ERROR);
   }
 
-  // Jouer un son de notification
+  /**
+   * Joue un son de notification (raccourci pour NOTIFICATION)
+   *
+   * @async
+   * @method playNotification
+   * @returns {Promise<void>}
+   */
   async playNotification() {
     await this.playSound(SoundType.NOTIFICATION);
   }
 }
 
-// Exporter une instance unique du service
+/**
+ * Instance singleton du service de feedback sonore
+ *
+ * Utilisez cette instance exportée pour accéder aux fonctionnalités
+ * de feedback sonore dans toute l'application.
+ *
+ * @constant {SoundFeedbackService} soundFeedback
+ * @exports soundFeedback
+ *
+ * @example
+ * import { soundFeedback, SoundType } from './services/soundFeedbackService';
+ *
+ * // Jouer un son de succès
+ * await soundFeedback.playSound(SoundType.SUCCESS);
+ */
 export const soundFeedback = new SoundFeedbackService();

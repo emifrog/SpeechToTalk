@@ -16,7 +16,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
-import { GOOGLE_CLOUD_API_KEY } from '../config';
+import { getGoogleCloudApiKey } from '../config';
 import { Theme } from '../constants/Theme';
 import { LANGUAGES, translateText } from '../services/translationService';
 import { Collapsible } from './Collapsible';
@@ -44,7 +44,11 @@ const recognizeTextFromImage = async (imageUri: string): Promise<string> => {
     }
 
     // Préparer la requête pour l'API Google Cloud Vision
-    const apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${GOOGLE_CLOUD_API_KEY}`;
+    const apiKey = getGoogleCloudApiKey();
+    if (!apiKey) {
+      throw new Error('Clé API non configurée. Veuillez configurer votre clé API dans les paramètres.');
+    }
+    const apiUrl = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
     const requestBody = {
       requests: [
         {
